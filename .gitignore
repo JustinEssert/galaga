@@ -1,0 +1,8 @@
+*.bak
+*.uvguix
+*.uvguix.*
+*.uvprojx
+*.dep
+*.scvd
+*.o
+*.a
