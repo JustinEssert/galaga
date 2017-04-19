@@ -1,0 +1,67 @@
+<html>
+<body>
+<pre>
+<h1>µVision Build Log</h1>
+<h2>Project:</h2>
+I:\WIN\Desktop\Final\HW4\HW4.uvprojx
+Project File Date:  04/07/2017
+
+<h2>Output:</h2>
+Rebuild target 'HW2'
+compiling main.c...
+main.c(59): warning:  #223-D: function "initialize_serial_debug" declared implicitly
+        initialize_serial_debug();
+main.c(63): warning:  #223-D: function "ps2_initialize_HW3" declared implicitly
+        ps2_initialize_HW3();
+main.c(85): warning:  #223-D: function "gp_timer_config_16_periodic" declared implicitly
+        gp_timer_config_16_periodic(TIMER0_BASE, TIMER_TAPR_PRESCALE, TIMER_TAILR_10MS_W_PRESCALE, TIMER_TBPR_PRESCALE, TIMER_TBILR_30MS_W_PRESCALE);
+main.c(378): warning:  #223-D: function "put_string" declared implicitly
+        put_string("\n\r");
+main.c: 4 warnings, 0 errors
+compiling adc.c...
+compiling gpio_port.c...
+..\drivers\c\gpio_port.c(82): warning:  #188-D: enumerated type mixed with another type
+         return 0;
+..\drivers\c\gpio_port.c: 1 warning, 0 errors
+compiling timers.c...
+compiling launchpad_io.c...
+compiling lcd.c...
+compiling ps2.c...
+assembling startup_TM4C123.s...
+compiling system_TM4C123.c...
+linking...
+.\obj\ece353_base_project.axf: Error: L6218E: Undefined symbol gp_timer_config_16_periodic (referred from main.o).
+.\obj\ece353_base_project.axf: Error: L6218E: Undefined symbol ps2_initialize_HW3 (referred from main.o).
+Not enough information to list image symbols.
+Finished: 1 information, 0 warning and 2 error messages.
+".\obj\ece353_base_project.axf" - 2 Error(s), 5 Warning(s).
+
+<h2>Software Packages used:</h2>
+
+Package Vendor: ARM
+                http://www.keil.com/pack/ARM.CMSIS.4.1.1.pack
+                ARM::CMSIS:CORE:3.30.0
+                CMSIS (Cortex Microcontroller Software Interface Standard)
+   * Component: CORE Version: 3.30.0
+
+Package Vendor: Keil
+                http://www.keil.com/pack/Keil.TM4C_DFP.1.0.0.pack
+                Keil::Device:Startup:1.0.0
+                Texas Instruments Tiva C Series Device Support and Examples
+   * Component: Startup Version: 1.0.0
+
+<h2>Collection of Component include folders:</h2>
+  I:\WIN\Desktop\Final\HW4\RTE
+  C:\AppV\mdk_510\ARM\PACK\ARM\CMSIS\4.1.1\CMSIS\Include
+  C:\AppV\mdk_510\ARM\PACK\Keil\TM4C_DFP\1.0.0\Device\Include\TM4C123
+
+<h2>Collection of Component Files used:</h2>
+
+   * Component: ARM::CMSIS:CORE:3.30.0
+      Source file:   CMSIS\UserCodeTemplates\ARM\ITM_Retarget.c
+
+   * Component: Keil::Device:Startup:1.0.0
+      Source file:   Device\Source\system_TM4C123.c
+      Include file:  Device\Include\TM4C123\TM4C123.h
+      Source file:   Device\Source\ARM\startup_TM4C123.s
+Target not created
