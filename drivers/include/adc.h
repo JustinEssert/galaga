@@ -27,7 +27,7 @@
 #include <stdbool.h>
 #include "TM4C123GH6PM.h"
 #include "driver_defines.h"
-
+#include "ps2.h"
 
 /******************************************************************************
  * Initializes ADC to use Sample Sequencer #3, triggered by software, no IRQs
@@ -41,6 +41,10 @@
  *****************************************************************************/
 bool initialize_adc(  uint32_t adc_base );
 
+/******************************************************************************
+ * Initializes ADC to use Sample Sequencer #2, triggered by the processor
+ *****************************************************************************/
+bool initialize_adc_HW3(  uint32_t adc_base );
 
 /******************************************************************************
  * Returns the analog reading for a given AIN channel.

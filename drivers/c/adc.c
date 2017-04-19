@@ -96,6 +96,80 @@ bool initialize_adc(  uint32_t adc_base )
   return true;
 }
 
+/******************************************************************************
+ * Initializes ADC to use Sample Sequencer #2, triggered by the processor
+ *****************************************************************************/
+bool initialize_adc_HW3(  uint32_t adc_base )
+{
+  ADC0_Type  *myADC;
+  uint32_t rcgc_adc_mask;
+  uint32_t pr_mask;
+  
+
+  // examine the adc_base.  Verify that it is either ADC0 or ADC1
+  // Set the rcgc_adc_mask and pr_mask  
+  switch (adc_base) 
+  {
+    case ADC0_BASE :
+    {
+      
+      // ADD CODE
+      // set rcgc_adc_mask
+			rcgc_adc_mask = SYSCTL_RCGCADC_R0;
+      // ADD CODE
+      // Set pr_mask 
+      pr_mask = SYSCTL_PRADC_R0;
+      break;
+    }
+    case ADC1_BASE :
+    {
+      // ADD CODE
+      // set rcgc_adc_mask
+      rcgc_adc_mask = SYSCTL_RCGCADC_R1;
+      // ADD CODE
+      // Set pr_mask 
+      pr_mask = SYSCTL_PRADC_R1;
+
+      break;
+    }
+    
+    default:
+      return false;
+  }
+  
+  // Turn on the ADC Clock
+  SYSCTL->RCGCADC |= rcgc_adc_mask;
+  
+  // Wait for ADCx to become ready
+  while( (pr_mask & SYSCTL->PRADC) != pr_mask){}
+    
+  // Type Cast adc_base and set it to myADC
+  myADC = (ADC0_Type *)adc_base;
+  
+  // ADD CODE
+  // disable sample sequencer #2 by writing a 0 to the 
+  // corresponding ASENn bit in the ADCACTSS register 
+	myADC->ACTSS &= ~ADC_ACTSS_ASEN2;
+  // ADD CODE
+  // Set the event multiplexer to trigger conversion on a processor trigger
+  // for sample sequencer #2.
+	myADC->EMUX &= ~ADC_EMUX_EM2_M;
+	myADC->EMUX |= ADC_EMUX_EM2_PROCESSOR;
+  // ADD CODE
+  // Set IE1 and END1 in SSCTL2
+  myADC->SSCTL2 |= (ADC_SSCTL2_IE1 | ADC_SSCTL2_END1);
+	
+	// Set Channels
+	myADC->SSMUX2 = (PS2_X_ADC_CHANNEL << 4) | PS2_Y_ADC_CHANNEL;
+  
+	// Set interrupt mask
+	myADC->IM |= ADC_IM_MASK2;
+	
+	// Enable SS2
+	myADC->ACTSS |= ADC_ACTSS_ASEN2;
+		
+  return true;
+}
 
 /******************************************************************************
  * Reads SSMUX3 for the given ADC.  Busy waits until completion

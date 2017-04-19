@@ -32,31 +32,36 @@
 
 // ADD CODE
 // Define the base addresses for the GPIO port that is connected to the PS2 Joystick
-#define   PS2_GPIO_BASE    GPIOE_BASE
+#define   PS2_GPIO_BASE    		GPIOE_BASE
 
 // ADD CODE
 // Define which bit number ( 0 through 7) each signal is connected to on the GPIO port.
 // This bit number is NOT the value listed in the Pin Number column of the datasheet.  
 // As an example, if the analog input was connected to pin PD2, you would set the bit
 // number to 2.
-#define   PS2_X_BIT_NUM      3
-#define   PS2_Y_BIT_NUM      2
+#define   PS2_X_BIT_NUM    		3
+#define   PS2_Y_BIT_NUM		 		2
 
 // Macros passed to the gpio functions that are used to configure the GPIO port.
-#define   PS2_X_DIR_MASK     (1 << PS2_X_BIT_NUM)
-#define   PS2_Y_DIR_MASK     (1 << PS2_Y_BIT_NUM)
+#define   PS2_X_DIR_MASK    	(1 << PS2_X_BIT_NUM)
+#define   PS2_Y_DIR_MASK   		(1 << PS2_Y_BIT_NUM)
 
 // ADD CODE
 // Define the base addresses of the the ADC you are going to use to either ADC0 or ADC1.
 // Either will work.
-#define   PS2_ADC_BASE     ADC0_BASE
+#define   PS2_ADC_BASE     		ADC0_BASE
 
 // ADD CODE
 // Set the analog channel for each direction.  Each analog channel is associated with a
 // single GPIO pin.  Make sure to see table 13-1 to see how the GPIO pin maps to an 
 // analog channel.  Specifically, look at the column Pin Name.
-#define   PS2_X_ADC_CHANNEL  0
-#define   PS2_Y_ADC_CHANNEL  1
+#define   PS2_X_ADC_CHANNEL 	0
+#define   PS2_Y_ADC_CHANNEL 	1
+
+// ADD CODE
+// Define the base addresses for the GPIO port that is connected to the PS2 Joystick
+#define   PS2_GPIO_BASE    GPIOE_BASE
+
 
 /*******************************************************************************
 * Function Name: ps2_initialize
@@ -65,6 +70,14 @@
 * ADC0 to use Sample Sequencer #3 to convert a programmable channel number.
 *******************************************************************************/
 void ps2_initialize(void);
+
+/*******************************************************************************
+* Function Name: ps2_initialize_H3
+********************************************************************************
+* Initializes the GPIO pins connected to the PS2 Joystick.  It also configures
+* ADC0 to use Sample Sequencer #2 to convert a programmable channel number.
+*******************************************************************************/
+void ps2_initialize_HW3(void);
 
 /*******************************************************************************
 * Function Name: ps2_get_x

@@ -185,82 +185,87 @@ bool gp_timer_config_32(uint32_t base_addr, uint32_t mode, bool count_up, bool e
   return true;  
 }
 //*****************************************************************************
-// Configure a general purpose timer to be two 16-bit timers.  
+//	Configures a general purpose timer to be two 16-bit periodic timers.  
 //
-// Paramters
-//  base_address          The base address of a general purpose timer
+//	Paramters:
+//	base_address					The base address of a general purpose timer
 //
-//  mode A/B              bit mask for Periodic, One-Shot, or Capture
+//	prescaleA							The prescale value for Timer A
 //
-//  count_up A/B          When true, the timer counts up.  When false, it counts
-//                        down
+//	valueA								The interval load value for Timer A
 //
-//  enable_interrupts A/B When set to true, the timer generates and interrupt
-//                        when the timer expires.  When set to false, the timer
-//                        does not generate interrupts.
+//	prescaleB							The prescale value for Timer B
 //
-//The function returns true if the base_addr is a valid general purpose timer
+//	valueB								The interval load value for Timer B
+//
+//	The function returns true if the base_addr is a valid general purpose timer
 //*****************************************************************************
-bool gp_timer_config_16_HW3()
+bool gp_timer_config_16_periodic(uint32_t base_addr, uint8_t prescaleA, uint16_t loadA, uint8_t prescaleB, uint16_t loadB)
 {
   
 	uint32_t timer_rcgc_mask;
   uint32_t timer_pr_mask;
-	uint32_t base_addr = TIMER0_BASE;
   TIMER0_Type *gp_timer;
   
-  /* Verify not needed when hardcoded Verify the base address.
-  if ( ! verify_base_addr(base_addr) )
-  {
-    return false;
-  }
-  */
-  // get the correct RCGC and PR masks for the base address
+	// VALIDATE INPUTS ==========================================================
+	// Verify that the base_addr is a timer
+  if (!verify_base_addr(base_addr)) return false;
+
+	
+  // ENABLE CLOCK =============================================================
+	// Get RCGC and PR masks for the given timer
   get_clock_masks(base_addr, &timer_rcgc_mask, &timer_pr_mask);
   
-  // Turn on the clock for the timer
+  // Turn on the timer's clock
   SYSCTL->RCGCTIMER |= timer_rcgc_mask;
 
-  // Wait for the timer to turn on
-  while( (SYSCTL->PRTIMER & timer_pr_mask) == 0) {
-	};
+  // Wait until the clock is on
+  while( (SYSCTL->PRTIMER & timer_pr_mask) == 0);
   
-  // Type cast the base address to a TIMER0_Type struct
+	
+	// CONFIGURE MODE ===========================================================
+  // Cast the base address to be a timer type
   gp_timer = (TIMER0_Type *)base_addr;
-    
-  //*********************    
-  // ADD CODE
-  //*********************
-	// Disable timerA and timerB
+	
+	// Disable TimerA and TimerB for configuration
 	gp_timer->CTL &= ~(TIMER_CTL_TAEN | TIMER_CTL_TBEN);
 	
-	// Set mode to 16-bit mode
+	// Set timer to be in 16-bit mode
 	gp_timer->CFG = TIMER_CFG_16_BIT;
 		
-	// TIMER CONFIG
+	// Reset TimerA/B settings
 	gp_timer->TAMR &= ~TIMER_TAMR_TAMR_M;
-	gp_timer->TAMR |= TIMER_TAMR_TAMR_M & TIMER_TAMR_TAMR_PERIOD;
 	gp_timer->TBMR &= ~TIMER_TBMR_TBMR_M;
-	gp_timer->TBMR |= TIMER_TBMR_TBMR_M & TIMER_TBMR_TBMR_PERIOD;
 	
-	gp_timer->TAPR = 1000;
-	gp_timer->TBPR = 1000;
+	// Set TimerA/B to be in periodic timer mode
+	gp_timer->TAMR |= TIMER_TAMR_TAMR_PERIOD;
+	gp_timer->TBMR |= TIMER_TBMR_TBMR_PERIOD;
 	
-	gp_timer->TAILR = 500;
-	gp_timer->TBILR = 1500;
 	
-	gp_timer->ICR |= TIMER_ICR_TATOCINT | TIMER_ICR_TBTOCINT;
-	gp_timer->CTL |= TIMER_CTL_TAEN | TIMER_CTL_TBEN;
+	// SET TIMER PERIOD =========================================================
+	// Set the prescaller for TimerA/B
+	gp_timer->TAPR = prescaleA;
+	gp_timer->TBPR = prescaleB;
 	
-	// Set the priority to 1
+	// Set the interval load value for TimerA/B
+	gp_timer->TAILR = loadA;
+	gp_timer->TBILR = loadB;
+	
+	
+	// CONFIGURE TIMER INTERRUPTS ===============================================
+	// Set differnt priorities for TimerA/B to prevent conflicts
 	NVIC_SetPriority(TIMER0A_IRQn, 1);
-	// Enable the NVIC for the watchdog timer
-	NVIC_EnableIRQ(TIMER0A_IRQn);
+	NVIC_SetPriority(TIMER0B_IRQn, 2);
 	
-	// Set the priority to 1
-	NVIC_SetPriority(TIMER0B_IRQn, 1);
-	// Enable the NVIC for the watchdog timer
+	// Enable the NVIC for the watchdog timer for TimerA/B
+	NVIC_EnableIRQ(TIMER0A_IRQn);
 	NVIC_EnableIRQ(TIMER0B_IRQn);
 	
+	// Enable Interrupts for TimerA/B
+	gp_timer->IMR |= TIMER_IMR_TATOIM | TIMER_IMR_TBTOIM;
+	
+	// Clear any past interrupts for TimerA/B
+	gp_timer->ICR |= TIMER_ICR_TATOCINT | TIMER_ICR_TBTOCINT;
+		
   return true;  
 }

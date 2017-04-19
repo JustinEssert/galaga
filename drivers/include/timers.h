@@ -26,6 +26,23 @@
 //*****************************************************************************
 bool gp_timer_config_32(uint32_t base_addr, uint32_t mode, bool count_up, bool enable_interrupts);
 
+//*****************************************************************************
+//	Configures a general purpose timer to be two 16-bit periodic timers.  
+//
+//	Paramters:
+//	base_address					The base address of a general purpose timer
+//
+//	prescaleA							The prescale value for Timer A
+//
+//	valueA								The interval load value for Timer A
+//
+//	prescaleB							The prescale value for Timer B
+//
+//	valueB								The interval load value for Timer B
+//
+//	The function returns true if the base_addr is a valid general purpose timer
+//*****************************************************************************
+bool gp_timer_config_16_periodic(uint32_t base_addr, uint8_t prescaleA, uint16_t loadA, uint8_t prescaleB, uint16_t loadB);
 
 //*****************************************************************************
 // Waits for 'ticks' number of clock cycles and then returns.
