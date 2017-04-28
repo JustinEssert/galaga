@@ -14,6 +14,12 @@ main.c(59): warning:  #223-D: function "initialize_serial_debug" declared implic
 main.c(378): warning:  #223-D: function "put_string" declared implicitly
         put_string("\n\r");
 main.c: 2 warnings, 0 errors
+compiling galaga.c...
+galaga.c(59): warning:  #223-D: function "initialize_serial_debug" declared implicitly
+        initialize_serial_debug();
+galaga.c(378): warning:  #223-D: function "put_string" declared implicitly
+        put_string("\n\r");
+galaga.c: 2 warnings, 0 errors
 compiling adc.c...
 compiling gpio_port.c...
 ..\drivers\c\gpio_port.c(82): warning:  #188-D: enumerated type mixed with another type
@@ -26,11 +32,26 @@ compiling timers.c...
 compiling launchpad_io.c...
 compiling lcd.c...
 compiling ps2.c...
-assembling startup_TM4C123.s...
 compiling system_TM4C123.c...
 linking...
-Program Size: Code=7824 RO-data=744 RW-data=68 ZI-data=13700  
-".\obj\ece353_base_project.axf" - 0 Error(s), 4 Warning(s).
+.\obj\ece353_base_project.axf: Error: L6200E: Symbol __ARM_use_no_argv multiply defined (by galaga.o and main.o).
+.\obj\ece353_base_project.axf: Error: L6200E: Symbol group multiply defined (by galaga.o and main.o).
+.\obj\ece353_base_project.axf: Error: L6200E: Symbol individual_1 multiply defined (by galaga.o and main.o).
+.\obj\ece353_base_project.axf: Error: L6200E: Symbol individual_2 multiply defined (by galaga.o and main.o).
+.\obj\ece353_base_project.axf: Error: L6200E: Symbol adc_val_X multiply defined (by galaga.o and main.o).
+.\obj\ece353_base_project.axf: Error: L6200E: Symbol adc_val_Y multiply defined (by galaga.o and main.o).
+.\obj\ece353_base_project.axf: Error: L6200E: Symbol initialize_hardware multiply defined (by galaga.o and main.o).
+.\obj\ece353_base_project.axf: Error: L6200E: Symbol shadow multiply defined (by galaga.o and main.o).
+.\obj\ece353_base_project.axf: Error: L6200E: Symbol shadow_update multiply defined (by galaga.o and main.o).
+.\obj\ece353_base_project.axf: Error: L6200E: Symbol draw_erase multiply defined (by galaga.o and main.o).
+.\obj\ece353_base_project.axf: Error: L6200E: Symbol TIMER0A_Handler multiply defined (by galaga.o and main.o).
+.\obj\ece353_base_project.axf: Error: L6200E: Symbol TIMER0B_Handler multiply defined (by galaga.o and main.o).
+.\obj\ece353_base_project.axf: Error: L6200E: Symbol ADC0SS2_Handler multiply defined (by galaga.o and main.o).
+.\obj\ece353_base_project.axf: Error: L6200E: Symbol main multiply defined (by galaga.o and main.o).
+Not enough information to list image symbols.
+Not enough information to list the image map.
+Finished: 2 information, 0 warning and 14 error messages.
+".\obj\ece353_base_project.axf" - 14 Error(s), 6 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -60,11 +81,4 @@ Package Vendor: Keil
       Include file:  Device\Include\TM4C123\TM4C123.h
       Source file:   Device\Source\ARM\startup_TM4C123.s
       Source file:   Device\Source\system_TM4C123.c
-Load "I:\\WIN\\Desktop\\PortableGit\\usr\\Final\\HW4\\obj\\ece353_base_project.axf" 
-Connecting: Mode=JTAG, Speed=1000000Hz
-Erase Done.
-Programming Done.
-Verify OK.
-</pre>
-</body>
-</html>
+Target not created
