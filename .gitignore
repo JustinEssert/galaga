@@ -2,6 +2,7 @@
 *.uvguix
 *.uvguix.*
 *.uvprojx
+*.uvoptx
 *.dep
 *.scvd
 *.o
