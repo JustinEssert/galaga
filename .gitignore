@@ -9,3 +9,10 @@
 *.a
 *.axf
 *.crf
+*.map
+*.lib
+*.lst
+*.iex
+*.htm
+*.lnp
+*.d
