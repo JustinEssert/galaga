@@ -19,8 +19,8 @@
 // WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING 
 // NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, 
 // EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-#ifndef __MAIN_H__
-#define __MAIN_H__
+#ifndef __GALAGA_H__
+#define __GALAGA_H__
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,40 +28,9 @@
 #include <string.h>
 
 #include "TM4C123.h"
+#include "galaga_bitmaps.h"
 
-// DEFINE PRESCALE VALUES =====================================================
-// Define a value of 100 to TimerA/B's prescale register to allow for a greater
-// maximum clock period.
-#define TIMER_TAPR_PRESCALE 100
-#define TIMER_TBPR_PRESCALE 100
+extern void menu_init();
 
-// DEFINE INTERVAL VALUES =====================================================
-// Define a ILR Value for Timer A to represent 10 ms
-#define TIMER_TAILR_10MS_W_PRESCALE 5000		// (5000*100)  / 50*10^6 = 10*10^3
-
-// Define a ILR Value for Timer B to represent 30 ms
-#define TIMER_TBILR_30MS_W_PRESCALE 15000		// (15000*100) / 50*10^6 = 30*10^3
-
-// DEFINE INTERRUPT CYCLES ====================================================
-// Define a value of 10 for TimerA/B's Interrupt Handler
-#define TIMER_A_CYCLES 10
-#define TIMER_B_CYCLES 10
-
-// DEFINE STATUS BITS FOR PS2 READ ============================================
-// Define a value of 10 for TimerA/B's Interrupt Handler
-#define MOVE_Y_M						3
-#define Y_LESS_THAN_1_4			1
-#define Y_GREATER_THAN_3_4	2
-#define MOVE_X_M						12
-#define X_LESS_THAN_1_4			4
-#define X_GREATER_THAN_3_4	8
-
-// DEFINE LCD VARS ============================================================
-#define LCD_WIDTH						240;
-#define LCD_HEIGHT					360;
-#define LCD_TOTAL_PIX				LCD_WIDTH*LCD_HEIGHT;
-
-
-extern void serialDebugInit(void);
 
 #endif

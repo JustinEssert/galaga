@@ -1,7 +1,6 @@
 *.bak
 *.uvguix
 *.uvguix.*
-*.uvprojx
 *.uvoptx
 *.dep
 *.scvd
@@ -10,7 +9,6 @@
 *.axf
 *.crf
 *.map
-*.lib
 *.lst
 *.iex
 *.htm

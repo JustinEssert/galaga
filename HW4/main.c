@@ -25,6 +25,7 @@
 #include "ps2.h"
 #include "launchpad_io.h"
 #include "lcd.h"
+#include "galaga.h"
 
 char group[] = "Group27";
 char individual_1[] = "Justin Essert";
@@ -386,7 +387,10 @@ int main(void)
   put_string("\n\r");  
   put_string("************************************\n\r");
 	
-	// INFINITE LOOP ============================================================
+	menu_init();
+	
+	
+	/*/ INFINITE LOOP ============================================================
   while(1)
 	{
 		//*************************************************************************
@@ -451,4 +455,5 @@ int main(void)
 			draw_erase(x_value, y_value);
 		}
   }
+	//*/
 }
