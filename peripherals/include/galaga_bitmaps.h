@@ -56,6 +56,12 @@ void lcd_print_stringXY(
 
 void lcd_print_Image(
     int16_t x,
+		int16_t y,
+		short type
+);
+		
+void lcd_clear_Image(
+	  int16_t x,
 		int16_t y
 );
 #endif
