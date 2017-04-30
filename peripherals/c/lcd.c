@@ -213,9 +213,10 @@ void lcd_draw_image(
 }
 
 /*******************************************************************************
-* Function Name: lcd_draw_image
+* Function Name: lcd_draw_unit
 ********************************************************************************
 * Summary: Prints a unit starting at x_start and y_start
+* 				 IMAGE IS ASSUMED TO BE 24px by 24px AS ALL UNITS ARE OF THIS SIZE
 * Returns:
 *  Nothing
 *******************************************************************************/
@@ -229,13 +230,18 @@ void lcd_draw_unit(
   uint16_t f1Color,
   uint16_t f2Color,
   uint16_t f3Color,	
-  uint16_t bColor
+  uint16_t bColor,
+	bool flipX,
+	bool flipY
 )
 {
-  uint16_t i,j;
+  uint16_t i,j,k;
   uint8_t data0, data1;
   uint16_t byte_index;
   uint16_t bytes_per_row;
+	uint16_t bytes_per_image;
+	uint16_t row_offset;
+	uint16_t column;
   uint16_t x0;
   uint16_t x1;
   uint16_t y0;
@@ -254,23 +260,46 @@ void lcd_draw_unit(
   {
     bytes_per_row++;
   }
+	bytes_per_image = bytes_per_row * image_height_pixels;
   
   for (i=0;i< image_height_pixels ;i++)
   {
-        for(j= 0; j < image_width_bits; j++)
+				// Draw each byte of a row
+        for(j= 0; j < bytes_per_row; j++)
         {
-            if( (j %8) == 0)
-            {
-              byte_index = (i*bytes_per_row) + j/8;
-              data0 = image0[byte_index];
-							data1 = image1[byte_index];
-            }
-            if ( data1 & (~data0) & 0x80) 			lcd_write_data_u16(f1Color);
-						else if ( (~data1) & data0 & 0x80) 	lcd_write_data_u16(f2Color);
-						else if ( data1 & data0 & 0x80) 	lcd_write_data_u16(f3Color);
-            else 															lcd_write_data_u16(bColor);
-            data0  = data0 << 1;
-						data1  = data1 << 1;
+						if (flipY)
+							row_offset = bytes_per_image - ((i+1)*bytes_per_row);
+						else
+							row_offset = (i*bytes_per_row);
+						
+						if (flipX)
+							column = (bytes_per_row-1) - j;
+						else
+							column = j;
+						
+						byte_index = row_offset + column;
+						
+						
+						data0 = image0[byte_index];
+						data1 = image1[byte_index];
+						// Draw one byte
+						for (k = 0; k < 8; k++){
+							if(!flipX){
+								if ( data1 & (~data0) & 0x80) 			lcd_write_data_u16(f1Color);
+								else if ( (~data1) & data0 & 0x80) 	lcd_write_data_u16(f2Color);
+								else if ( data1 & data0 & 0x80) 	lcd_write_data_u16(f3Color);
+								else 															lcd_write_data_u16(bColor);
+								data0  = data0 << 1;
+								data1  = data1 << 1;
+							} else {
+								if ( data1 & (~data0) & 0x01) 			lcd_write_data_u16(f1Color);
+								else if ( (~data1) & data0 & 0x01) 	lcd_write_data_u16(f2Color);
+								else if ( data1 & data0 & 0x01) 	lcd_write_data_u16(f3Color);
+								else 															lcd_write_data_u16(bColor);
+								data0  = data0 >> 1;
+								data1  = data1 >> 1;
+							}
+						}
         }
   }
 }
