@@ -30,7 +30,28 @@
 #include "TM4C123.h"
 #include "galaga_bitmaps.h"
 
-extern void menu_init();
 
+#define STEP	5;
+
+#define FORMATION_1_LEFT_START_X		150
+#define FORMATION_1_RIGHT_START_X		60
+#define FORMATION_1_START_Y					250
+#define FORMATION_2_LEFT_START_X		210
+#define FORMATION_2_RIGHT_START_X		0
+#define FORMATION_2_START_Y					60
+
+#define BOUNDRY_Y_TOP								280
+#define BOUNDRY_Y_BOTTOM						30
+
+#define PLAYER_START_LIVES					3
+#define PLAYER_START_X							108
+#define PLAYER_START_Y							30
+
+#define NUM_UNITS										17
+
+
+void game_init();
+void update_enemies();
+void update_LCD();
 
 #endif
