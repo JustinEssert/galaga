@@ -1572,8 +1572,25 @@ const uint8_t galaga_up_left_m0[] =
 	0x00,	0x04,	0x00, //             #          
 	0x00,	0x00,	0x00, //              
 };
-
-
+const uint8_t shrapnel[] =
+{
+  0x10, 0x50, 0x0A,
+  0x04, 0x22, 0x21,
+  0x10, 0xE0, 0x02,
+  0x24, 0x61, 0x30,
+  0x52, 0x96, 0x94,             
+  0x01, 0x20, 0x36,            
+  0x96, 0xEF, 0xC9,            
+  0x2F, 0xFF, 0x65,              
+  0x96, 0xEF, 0xC9,           
+  0x01, 0x20, 0x36,           
+  0x52, 0x96, 0x94,             
+  0x24, 0x61, 0x30,          
+  0x10, 0xE0, 0x02,           
+  0x04, 0x22, 0x21,          
+  0x04, 0x22, 0x21,
+  0x00, 0x00, 0x00, 
+};
 /**********************************************************
 * Function Name: lcd_print_stringXY
 **********************************************************
@@ -1638,7 +1655,13 @@ void lcd_clear_Image(
 	lcd_draw_image(x, 24, y, 24, ship_m0, LCD_COLOR_BLACK, LCD_COLOR_BLACK);
 }
 
-
+void lcd_draw_explosion(
+	  int16_t x,
+		int16_t y
+)
+{
+	lcd_draw_image(x, 24, y, 24, shrapnel, LCD_COLOR_RED, LCD_COLOR_BLACK);
+}
 
 
 void lcd_print_Image(

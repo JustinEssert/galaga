@@ -305,6 +305,34 @@ void lcd_draw_unit(
 }
 
 /*******************************************************************************
+* Function Name: lcd_draw_bullet
+********************************************************************************
+* Summary: Prints a bullet to the specified x and y coordinates
+* Returns:
+*  Nothing
+*******************************************************************************/
+void lcd_draw_bullet(
+  uint16_t x_start, 
+  uint16_t image_width_bits, 
+  uint16_t y_start, 
+  uint16_t image_height_pixels,
+  uint16_t color
+)
+{
+	short i,j;
+	lcd_set_pos(x_start, x_start + image_width_bits, y_start, y_start + image_height_pixels);
+	for (i=0;i< image_height_pixels ;i++)
+	{
+		// Draw each byte of a row
+		for(j= 0; j < image_width_bits; j++)
+		{
+			lcd_write_data_u16(color);
+		}
+	}
+	
+}
+
+/*******************************************************************************
 * Function Name: lcd_draw_px
 ********************************************************************************
 * Summary: Prints a single pixel to the specified x and y coordinates

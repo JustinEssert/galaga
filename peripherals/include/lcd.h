@@ -257,7 +257,23 @@ void lcd_draw_unit(
 	bool flipY												// if true, flip image across x axis
 );
 	
-	
+
+/*******************************************************************************
+* Function Name: lcd_draw_bullet
+********************************************************************************
+* Summary: Prints a bullet to the specified x and y coordinates
+* Returns:
+*  Nothing
+*******************************************************************************/
+void lcd_draw_bullet(
+  uint16_t x_start, 
+  uint16_t image_width_bits, 
+  uint16_t y_start, 
+  uint16_t image_height_pixels,
+  uint16_t color
+);
+
+
 /*******************************************************************************
 * Function Name: lcd_draw_px
 ********************************************************************************
