@@ -211,6 +211,70 @@ void lcd_draw_image(
         }
   }
 }
+
+/*******************************************************************************
+* Function Name: lcd_draw_image
+********************************************************************************
+* Summary: Prints a unit starting at x_start and y_start
+* Returns:
+*  Nothing
+*******************************************************************************/
+void lcd_draw_unit(
+  uint16_t x_start, 
+  uint16_t image_width_bits, 
+  uint16_t y_start, 
+  uint16_t image_height_pixels, 
+  const uint8_t *image0, 
+	const uint8_t *image1,
+  uint16_t f1Color,
+  uint16_t f2Color,
+  uint16_t f3Color,	
+  uint16_t bColor
+)
+{
+  uint16_t i,j;
+  uint8_t data0, data1;
+  uint16_t byte_index;
+  uint16_t bytes_per_row;
+  uint16_t x0;
+  uint16_t x1;
+  uint16_t y0;
+  uint16_t y1;
+ 
+  x0 = x_start;
+  x1 = x_start + image_width_bits-1;
+  
+  y0 = y_start;
+  y1 = y_start  + image_height_pixels-1 ;
+  
+  lcd_set_pos(x0, x1, y0, y1);
+  
+  bytes_per_row = image_width_bits / 8;
+  if( (image_width_bits % 8) != 0)
+  {
+    bytes_per_row++;
+  }
+  
+  for (i=0;i< image_height_pixels ;i++)
+  {
+        for(j= 0; j < image_width_bits; j++)
+        {
+            if( (j %8) == 0)
+            {
+              byte_index = (i*bytes_per_row) + j/8;
+              data0 = image0[byte_index];
+							data1 = image1[byte_index];
+            }
+            if ( data1 & (~data0) & 0x80) 			lcd_write_data_u16(f1Color);
+						else if ( (~data1) & data0 & 0x80) 	lcd_write_data_u16(f2Color);
+						else if ( data1 & data0 & 0x80) 	lcd_write_data_u16(f3Color);
+            else 															lcd_write_data_u16(bColor);
+            data0  = data0 << 1;
+						data1  = data1 << 1;
+        }
+  }
+}
+
 /*******************************************************************************
 * Function Name: lcd_draw_px
 ********************************************************************************
