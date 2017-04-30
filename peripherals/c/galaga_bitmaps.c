@@ -1639,14 +1639,14 @@ void lcd_print_Image(
 		int16_t y
 )
 {
-	lcd_draw_unit(0, UNIT_WIDTH, y, UNIT_HEIGHT, ship_m0, ship_m1, SHIP_COLOR_1, SHIP_COLOR_2, SHIP_COLOR_3, LCD_COLOR_BLACK);
-	lcd_draw_unit(30, UNIT_WIDTH, y, UNIT_HEIGHT, galaga_m0, galaga_m1, GALAGA_COLOR_1, GALAGA_COLOR_2, GALAGA_COLOR_3, LCD_COLOR_BLACK);
-	lcd_draw_unit(60, UNIT_WIDTH, y, UNIT_HEIGHT, bee_m0, bee_m1, BEE_COLOR_1, BEE_COLOR_2, BEE_COLOR_3, LCD_COLOR_BLACK);
-  lcd_draw_unit(90, UNIT_WIDTH, y, UNIT_HEIGHT, butterfly_m0, butterfly_m1, BUTTERFLY_COLOR_1, BUTTERFLY_COLOR_2, BUTTERFLY_COLOR_3, LCD_COLOR_BLACK);
-	lcd_draw_unit(120, UNIT_WIDTH, y, UNIT_HEIGHT, butterfly_up_left_m0, butterfly_up_left_m1, BUTTERFLY_COLOR_1, BUTTERFLY_COLOR_2, BUTTERFLY_COLOR_3, LCD_COLOR_BLACK);
-	lcd_draw_unit(150, UNIT_WIDTH, y, UNIT_HEIGHT, galaga_up_left_m0, galaga_up_left_m1, GALAGA_COLOR_1, GALAGA_COLOR_2, GALAGA_COLOR_3, LCD_COLOR_BLACK);
-	lcd_draw_unit(180, UNIT_WIDTH, y, UNIT_HEIGHT, bee_up_left_m0, bee_up_left_m1, BEE_COLOR_1, BEE_COLOR_2, BEE_COLOR_3, LCD_COLOR_BLACK);
-	lcd_draw_unit(210, UNIT_WIDTH, y, UNIT_HEIGHT, bee_up_left_m0, bee_up_left_m1, BEE_COLOR_1, BEE_COLOR_2, BEE_COLOR_3, LCD_COLOR_BLACK);
+	lcd_draw_unit(0, UNIT_WIDTH, y, UNIT_HEIGHT, ship_m0, ship_m1, SHIP_COLOR_1, SHIP_COLOR_2, SHIP_COLOR_3, LCD_COLOR_BLACK, false,false);
+	lcd_draw_unit(30, UNIT_WIDTH, y, UNIT_HEIGHT, galaga_m0, galaga_m1, GALAGA_COLOR_1, GALAGA_COLOR_2, GALAGA_COLOR_3, LCD_COLOR_BLACK, true,false);
+	lcd_draw_unit(60, UNIT_WIDTH, y, UNIT_HEIGHT, bee_m0, bee_m1, BEE_COLOR_1, BEE_COLOR_2, BEE_COLOR_3, LCD_COLOR_BLACK, false,true);
+  lcd_draw_unit(90, UNIT_WIDTH, y, UNIT_HEIGHT, butterfly_m0, butterfly_m1, BUTTERFLY_COLOR_1, BUTTERFLY_COLOR_2, BUTTERFLY_COLOR_3, LCD_COLOR_BLACK, true,true);
+	lcd_draw_unit(120, UNIT_WIDTH, y, UNIT_HEIGHT, butterfly_up_left_m0, butterfly_up_left_m1, BUTTERFLY_COLOR_1, BUTTERFLY_COLOR_2, BUTTERFLY_COLOR_3, LCD_COLOR_BLACK, false,false);
+	lcd_draw_unit(150, UNIT_WIDTH, y, UNIT_HEIGHT, galaga_up_left_m0, galaga_up_left_m1, GALAGA_COLOR_1, GALAGA_COLOR_2, GALAGA_COLOR_3, LCD_COLOR_BLACK, true,false);
+	lcd_draw_unit(180, UNIT_WIDTH, y, UNIT_HEIGHT, bee_up_left_m0, bee_up_left_m1, BEE_COLOR_1, BEE_COLOR_2, BEE_COLOR_3, LCD_COLOR_BLACK, false,true);
+	lcd_draw_unit(210, UNIT_WIDTH, y, UNIT_HEIGHT, bee_up_left_m0, bee_up_left_m1, BEE_COLOR_1, BEE_COLOR_2, BEE_COLOR_3, LCD_COLOR_BLACK, true,true);
 
 
 }

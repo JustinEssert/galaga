@@ -232,7 +232,7 @@ void lcd_draw_image(
   uint16_t image_height_pixels,     // image height
   const uint8_t *image,             // bitmap of the image
   uint16_t fColor,                  // foreground color
-  uint16_t bColor                   // background color
+  uint16_t bColor                  // background color
 );
 	
 /*******************************************************************************
@@ -252,7 +252,9 @@ void lcd_draw_unit(
   uint16_t f1Color,
   uint16_t f2Color,
   uint16_t f3Color,	
-  uint16_t bColor
+  uint16_t bColor,
+	bool flipX,												// if true, flip image across y axis
+	bool flipY												// if true, flip image across x axis
 );
 	
 	
