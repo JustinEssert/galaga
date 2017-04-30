@@ -1606,6 +1606,26 @@ const uint8_t shrapnel[] =
 * Returns:
 *  Nothing
 **********************************************************/
+
+// must hand in size 9 char array
+void itoa(uint16_t source, char* dest_ADDRESS_OF_SIZE_NINE_CHAR_ARRAY_PLEASE_AND_THANK_YOU){
+	char* a = dest_ADDRESS_OF_SIZE_NINE_CHAR_ARRAY_PLEASE_AND_THANK_YOU;
+	uint8_t temp;
+	int index = 8;
+	
+	a[index] = '\0';
+	index --;
+	
+	while ( index >= 0){
+		temp = source%10;
+		a[index] = (char)(temp + 48);
+		
+		source /= 10;
+		index --;
+	}
+	return;	
+}
+
 void lcd_print_stringXY(
     char *msg,
     int8_t X,

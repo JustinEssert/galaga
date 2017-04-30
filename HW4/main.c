@@ -26,6 +26,18 @@
 #include "launchpad_io.h"
 #include "lcd.h"
 #include "port_expander.h"
+#include "i2c.h"
+#include "eeprom.h"
+#include "galaga.h"
+#include "ft6x06.h"
+
+typedef enum {
+	MAIN_MENU,
+	HIGH_SCORE,
+	MAIN_GAME,
+	GAME_OVER,
+	NEW_RECORD
+} gameState_t;
 
 char group[] = "Group27";
 char individual_1[] = "Justin Essert";
@@ -36,9 +48,9 @@ static ADC0_Type* myADC = ((ADC0_Type *)PS2_ADC_BASE);
 					
 
 // Booleans to allow the handlers to communicate with main()
-static volatile bool interrupt_timerA = false;
-static volatile bool interrupt_timerB = false;
-static volatile bool interrupt_adc0ss2 = false;
+volatile bool interrupt_timerA = false;
+volatile bool interrupt_timerB = false;
+volatile bool interrupt_adc0ss2 = false;
 
 uint16_t *adc_val_X;
 uint16_t *adc_val_Y;
@@ -89,6 +101,13 @@ void initialize_hardware(void)
 	
 	// Enable Timer A and B
 	TIMER0->CTL |= TIMER_CTL_TAEN | TIMER_CTL_TBEN;
+	
+	
+	// INITIALIZE TOUCH SCREEN
+	DisableInterrupts();
+  ft6x06_init();
+  EnableInterrupts();
+	
 }
 
 //*****************************************************************************
@@ -184,6 +203,12 @@ int main(void)
 	uint32_t x_value;
 	uint32_t y_value;
 	uint8_t data;
+	i2c_status_t td_status;
+	uint16_t x = 0;
+	uint16_t y = 0;
+	gameState_t state = HIGH_SCORE;
+	uint16_t addr;
+
 	
 	// INITIALIZE FUNCTIONS =====================================================
 	initialize_hardware();
@@ -200,20 +225,78 @@ int main(void)
   put_string("\n\r");  
   put_string("************************************\n\r");
 	
-	game_init();
+	
+	
+	
+	for(addr = ADDR_START; addr <(ADDR_START+3*5); addr++)
+  {
+      printf("Writing %i\n\r",0x0);
+      eeprom_byte_write(I2C1_BASE,addr, 0x0);
+  }
+	
+	
 
+  high_scores_test();
+	lcd_clear_screen(LCD_COLOR_BLACK);
   while(1)
 	{
-		//*************************************************************************
-		// TIMER A INTERRUPT HANDLING
-		//*************************************************************************
-		if(interrupt_timerA)
-		{		
-			// CLEAR INTERRUPT INDICATOR ============================================
-			interrupt_timerA = false;
+		if(state == MAIN_MENU){
+			if(interrupt_timerA){
+				interrupt_timerA = false;
+				td_status = ft6x06_read_td_status();
+				print_main_menu();
+			}
+
+			if( td_status >0 )
+				y = ft6x06_read_y();
+
 			
-			// TOGGLE LED ===========================================================
-			// Increment the counter & reset to zero if it reached TIMER_A_CYCLES
+			if ((y >120)&& (y < 170)){
+				lcd_clear_screen(LCD_COLOR_BLACK);
+				game_init();
+				state = MAIN_GAME;
+			}
+			
+			else if ((y > 70) && ( y < 120 )){
+				lcd_clear_screen(LCD_COLOR_BLACK);
+				pull_high_scores();
+				state = HIGH_SCORE;
+			}
+		}
+
+		if (state == HIGH_SCORE){
+			
+			if(interrupt_timerB){
+				interrupt_timerB = false;
+				td_status = ft6x06_read_td_status();
+				
+				counterB = ((counterB+1)%TIMER_B_CYCLES);
+				if(counterB==0)
+					print_high_scores();
+			}
+			
+
+			if( td_status >0 )
+				y = ft6x06_read_y();
+			
+			if ( (y < 60) && (y > 10) ){
+				lcd_clear_screen(LCD_COLOR_BLACK);
+				state = MAIN_MENU;
+			}			
+
+		}
+		
+		if(state == MAIN_GAME){
+			//*************************************************************************
+			// TIMER A INTERRUPT HANDLING
+			//*************************************************************************
+			if(interrupt_timerA)
+			{		
+				// CLEAR INTERRUPT INDICATOR ============================================
+				interrupt_timerA = false;
+				
+				// TOGGLE LED ===========================================================
+				// Increment the counter & reset to zero if it reached TIMER_A_CYCLES
 			counterA = ((counterA+1)%TIMER_A_CYCLES);
 			update_bullets();
 			// Toggle Blue LED every time the counter resets
@@ -226,55 +309,77 @@ int main(void)
 				}
 				// Initialize ADC Read
 				myADC->PSSI = ADC_PSSI_SS2;
+				
+				
+				// TOGGLE WRITE MODE ====================================================
+				if(sw1_debounce()){
+				}
 			}
 			
-			
-			// TOGGLE WRITE MODE ====================================================
-			if(sw1_debounce()){
-		  }
-		}
-		
-		//*************************************************************************
-		// TIMER B INTERRUPT HANDLING
-		//*************************************************************************
-		if(interrupt_timerB)
-		{					
-			// CLEAR INTERRUPT INDICATOR ============================================
-			interrupt_timerB = false;
-			
-			
-
-			
-			if(counterB==0) {
-
+			//*************************************************************************
+			// TIMER B INTERRUPT HANDLING
+			//*************************************************************************
+			if(interrupt_timerB)
+			{					
+				// CLEAR INTERRUPT INDICATOR ============================================
+				interrupt_timerB = false;
+				if(counterB==0) {
+					update_enemies();
+					update_LCD();
+				}
+				// TOGGLE LED & INITIALIZE ADC READ =====================================
+				// Increment the counter & reset to zero if it reached TIMER_B_CYCLES
+				counterB = ((counterB+1)%TIMER_B_CYCLES);
+				
+				// Initialize ADC Read
+				myADC->PSSI = ADC_PSSI_SS2;
+				
+				if(counterB==0) {
+				}
 			}
-			// TOGGLE LED & INITIALIZE ADC READ =====================================
-			// Increment the counter & reset to zero if it reached TIMER_B_CYCLES
-			counterB = ((counterB+1)%TIMER_B_CYCLES);
-			
+			//*************************************************************************
+			// ADC0SS2 INTERRUPT HANDLING
+			//*************************************************************************
+			if(interrupt_adc0ss2)
+			{	
+				// CLEAR INTERRUPT INDICATOR ============================================
+				interrupt_adc0ss2 = false;
 
-			
-			if(counterB==0) {
-
-			}
-		}
-
-		//*************************************************************************
-		// ADC0SS2 INTERRUPT HANDLING
-		//*************************************************************************
-		if(interrupt_adc0ss2)
-		{	
-			// CLEAR INTERRUPT INDICATOR ============================================
-			interrupt_adc0ss2 = false;
-
-			y_value = (uint32_t)(myADC->SSFIFO2 & 0xFFF);
-			x_value = (uint32_t)(myADC->SSFIFO2 & 0xFFF);
-			
+				x_value = (uint32_t)(myADC->SSFIFO2 & 0xFFF);
+				y_value = (uint32_t)(myADC->SSFIFO2 & 0xFFF);
+				
 			if(x_value >= 0xBFD)
 				update_player(true);
 			else if (x_value <= 0x3FF)
 				update_player(false);
-
+			}
 		}
-  }
+		
+		
+		if(state == GAME_OVER){
+			
+			if(interrupt_timerB){
+				interrupt_timerB = false;
+				td_status = ft6x06_read_td_status();
+				
+				counterB = ((counterB+1)%TIMER_B_CYCLES);
+				if(counterB==0)
+					print_game_over();
+			}
+			
+			if( td_status >0 )
+				y = ft6x06_read_y();
+			
+			if ( (y < 120) && (y > 10) ){
+				lcd_clear_screen(LCD_COLOR_BLACK);
+				state = HIGH_SCORE;
+			}			
+		}
+		
+		if(state == NEW_RECORD){
+			
+			
+			
+		}
+	}
 }
