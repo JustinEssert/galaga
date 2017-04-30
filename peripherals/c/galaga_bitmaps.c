@@ -1969,19 +1969,33 @@ void lcd_print_stringXY(
 
 
 }
-
-void lcd_print_Image(
-    int16_t x,
+void lcd_clear_Image(
+	  int16_t x,
 		int16_t y
 )
 {
-	//Declare variables and store the initial value of X for wrap around
-	uint8_t i,j;
+	lcd_draw_image(x, 24, y, 24, ship_m, LCD_COLOR_BLACK, LCD_COLOR_BLACK);
+}
 
-
-	lcd_draw_image(10, 24, y, 24, ship_m, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
-	lcd_draw_image(40, 24, y, 24, bee_m, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
-	lcd_draw_image(70, 24, y, 24, butterfly_m, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
-	lcd_draw_image(100, 24, y, 24, galaga_m, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
-
+void lcd_print_Image(
+    int16_t x,
+		int16_t y,
+		short type
+)
+{
+	switch(type)
+	{
+		case 0:
+			lcd_draw_image(x, 24, y, 24, ship_m, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
+		break;
+		case 1:
+			lcd_draw_image(x, 24, y, 24, butterfly_m, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
+		break;
+		case 2:
+			lcd_draw_image(x, 24, y, 24, bee_m, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
+		break;
+		case 3:
+			lcd_draw_image(x, 24, y, 24, galaga_m, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
+		break;
+	};
 }
