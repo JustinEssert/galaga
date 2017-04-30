@@ -48,11 +48,22 @@
 #define PLAYER_START_Y							30
 
 #define NUM_UNITS										17
-
+#define NUM_HIGH_SCORES							5
 
 
 void game_init();
 void update_enemies();
 void update_LCD();
+
+
+
+void print_main_menu();
+void print_game_over();
+
+void pull_high_scores();
+bool push_high_scores(char* initials);
+void print_high_scores();
+
+void high_scores_test();
 
 #endif

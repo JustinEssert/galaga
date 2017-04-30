@@ -62,6 +62,11 @@
 #define LCD_TOTAL_PIX				LCD_WIDTH*LCD_HEIGHT;
 
 
+// DEFINE EEPROM VARS
+#define ADDR_START    256
+#define NUM_BYTES      10
+
+
 extern void serialDebugInit(void);
 
 #endif
