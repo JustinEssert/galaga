@@ -1635,7 +1635,7 @@ void lcd_clear_Image(
 		int16_t y
 )
 {
-	lcd_draw_image(x, 24, y, 24, ship_m, LCD_COLOR_BLACK, LCD_COLOR_BLACK);
+	lcd_draw_image(x, 24, y, 24, ship_m0, LCD_COLOR_BLACK, LCD_COLOR_BLACK);
 }
 
 
@@ -1644,23 +1644,47 @@ void lcd_clear_Image(
 void lcd_print_Image(
     int16_t x,
 		int16_t y,
-		short type
+		short type,
+		short dir
 )
 {
-
+	bool flipX;
+	bool flipY;
+	switch(dir){
+		case 0:
+			break;
+		case 1:
+			break;
+		case 2:
+			break;
+		case 3:
+			break;
+		case 4:
+			break;
+		case 5:
+			break;
+		case 6:
+			break;
+		case 7:
+			break;
+	};
+	
+	flipX = false;
+	flipY = false;
+		
 	switch(type)
 	{
 		case 0:
-			lcd_draw_image(x, 24, y, 24, ship_m, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
+			lcd_draw_unit(x, 24, y, 24, ship_m0, ship_m1, SHIP_COLOR_1, SHIP_COLOR_2, SHIP_COLOR_3, LCD_COLOR_BLACK, flipX, flipY);
 		break;
 		case 1:
-			lcd_draw_image(x, 24, y, 24, butterfly_m, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
+			lcd_draw_unit(x, 24, y, 24, butterfly_m0, butterfly_m1, BUTTERFLY_COLOR_1, BUTTERFLY_COLOR_2, BUTTERFLY_COLOR_3, LCD_COLOR_BLACK, flipX, flipY);
 		break;
 		case 2:
-			lcd_draw_image(x, 24, y, 24, bee_m, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
+			lcd_draw_unit(x, 24, y, 24, bee_m0, bee_m1, BEE_COLOR_1, BEE_COLOR_2, BEE_COLOR_3, LCD_COLOR_BLACK, flipX, flipY);
 		break;
 		case 3:
-			lcd_draw_image(x, 24, y, 24, galaga_m, LCD_COLOR_WHITE, LCD_COLOR_BLACK);
+			lcd_draw_unit(x, 24, y, 24, galaga_m0, galaga_m1, GALAGA_COLOR_1, GALAGA_COLOR_2, GALAGA_COLOR_3, LCD_COLOR_BLACK, flipX, flipY);
 		break;
 	};
 

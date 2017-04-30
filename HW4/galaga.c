@@ -29,13 +29,7 @@
 #include "galaga.h"
 
 
-typedef enum unitType {
-	PLAYER,
-	BUTTERFLY,
-	BEE,
-	GALAGA	
-} unitType_t;
-/*typedef enum direction {
+typedef enum direction {
 	DIR_U,
 	DIR_UR,
 	DIR_R,
@@ -44,13 +38,22 @@ typedef enum unitType {
 	DIR_DL,
 	DIR_L,
 	DIR_UL
-} direction_t;*/
+} direction_t;
+
+typedef enum unitType {
+	PLAYER,
+	BUTTERFLY,
+	BEE,
+	GALAGA	
+} unitType_t;
+
 
 typedef struct position{
 	uint16_t x;
 	uint16_t y;
 } position_t;
 typedef struct unit {
+	direction_t dir;
 	unitType_t type;
 	short health;
 	position_t pos;
@@ -184,7 +187,7 @@ void update_LCD () {
 	
 	//Print Extra Lives
 	for(i=0; i<player_lives-1;i++){
-		lcd_print_Image(210 - i*30, 0, 0);
+		lcd_print_Image(210 - i*30, 0, 0, DIR_U);
 	}
 	
 	//Print Score Info
@@ -193,7 +196,7 @@ void update_LCD () {
 	//Print units
 	for(i=0;i<NUM_UNITS;i++){
 		if(units[i].health > 0){
-			lcd_print_Image(units[i].pos.x, units[i].pos.y, units[i].type);
+			lcd_print_Image(units[i].pos.x, units[i].pos.y, units[i].type, units[i].dir);
 		}
 	}
 }
@@ -316,7 +319,7 @@ void update_enemies() {
 			
 		}
 		if(units[i].health > 0){
-			lcd_print_Image(units[i].pos.x, units[i].pos.y, units[i].type);
+			lcd_print_Image(units[i].pos.x, units[i].pos.y, units[i].type, units[i].dir);
 		}
 	}
 }
