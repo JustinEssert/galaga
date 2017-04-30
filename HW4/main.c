@@ -25,6 +25,7 @@
 #include "ps2.h"
 #include "launchpad_io.h"
 #include "lcd.h"
+#include "port_expander.h"
 #include "i2c.h"
 #include "eeprom.h"
 #include "galaga.h"
@@ -91,6 +92,7 @@ void initialize_hardware(void)
 	
 	// INITIALIZE LEDS AND SWITCH BUTTONS =======================================
 	lp_io_init();
+	port_expander_init();
 	
 	
 	// INITIALIZE TIMER =========================================================
@@ -107,76 +109,6 @@ void initialize_hardware(void)
   EnableInterrupts();
 	
 }
-
-
-
-
-//*****************************************************************************
-// Function Name: ship_move
-//*****************************************************************************
-//	Summary: Either draws or erases active active pixel
-// 
-//	Parameters:
-//
-//	draw: 				Pass in true to draw or false to erase
-//
-//*****************************************************************************
-void ship_move (uint32_t x_value, uint32_t y_value)
-{
-	static int xPos = 120;					// x coordinate of cursor
-	static int yPos = 160;					// y coordinate of cursor
-	uint32_t move = 0;
-	
-	// CHECK IF THE PS2 IS PAST ANY OF OUR THRESHOLDS ===========================
-	// Check if the x value is >= 75% or <= 25%
-	if(x_value >= 0xBFD)				move |= X_GREATER_THAN_3_4;
-	else if(x_value<= 0x3FF)		move |= X_LESS_THAN_1_4;
-	
-	// Check if the y value is >= 75% or <= 25%
-	if(y_value >= 0xBFD)				move |= Y_GREATER_THAN_3_4;
-	else if(y_value <= 0x3FF)		move |= Y_LESS_THAN_1_4;
-	
-	// CHECK THE MODE ===========================================================
-	// Clear pixel current position
-	lcd_draw_image(
-		xPos-6, 13, yPos-4, 9, placeholder_image, 
-		LCD_COLOR_BLACK, LCD_COLOR_BLACK
-  );
-	
-			
-		
-		// UPDATE THE X AND Y POSITIONS ===========================================
-		
-		// ** NOTE: THE X POSITION OF THE PS2 RELATES TO THE Y POSITION OF THE LCD **
-		
-		// If X (of the PS2) is greater than 75% of its max value, increment Y (of LCD).
-		if(move&X_GREATER_THAN_3_4) 	yPos++;
-		// If X (of the PS2) is less than 25% of its max value, decrement Y (of LCD).
-		else if(move&X_LESS_THAN_1_4) yPos--;
-		
-		// If Y (of the PS2) is greater than 75% of its max value, increment X (of LCD).
-		if(move&Y_GREATER_THAN_3_4) 	xPos++;
-		// If Y (of the PS2) is less than 25% of its max value, decrement X (of LCD).
-		else if(move&Y_LESS_THAN_1_4) xPos--;
-
-		// Check bound of Y and hold position if it goes off of the screen
-		if(yPos >= 316) yPos = 315;
-		else if(yPos <=4 ) yPos = 5;
-
-		// Check bound of Y and wrap around if it goes off of the screen
-		if(xPos >=  234) xPos = 233;
-		else if(xPos <= 5) xPos = 6;
-		
-	// Draw ship at new position 
-	lcd_draw_image(
-		xPos-6, 13, yPos-4, 9, placeholder_image, 
-		LCD_COLOR_WHITE, LCD_COLOR_BLACK
-  );
-}
-
-
-
-
 
 //*****************************************************************************
 //*****************************************************************************
@@ -270,11 +202,13 @@ int main(void)
 	int counterB = 0;		// Counter for TimerB's Interrupt Handler
 	uint32_t x_value;
 	uint32_t y_value;
+	uint8_t data;
 	i2c_status_t td_status;
 	uint16_t x = 0;
 	uint16_t y = 0;
 	gameState_t state = HIGH_SCORE;
 	uint16_t addr;
+
 	
 	// INITIALIZE FUNCTIONS =====================================================
 	initialize_hardware();
@@ -312,9 +246,10 @@ int main(void)
 				td_status = ft6x06_read_td_status();
 				print_main_menu();
 			}
-			
+
 			if( td_status >0 )
 				y = ft6x06_read_y();
+
 			
 			if ((y >120)&& (y < 170)){
 				lcd_clear_screen(LCD_COLOR_BLACK);
@@ -328,7 +263,7 @@ int main(void)
 				state = HIGH_SCORE;
 			}
 		}
-		
+
 		if (state == HIGH_SCORE){
 			
 			if(interrupt_timerB){
@@ -340,6 +275,7 @@ int main(void)
 					print_high_scores();
 			}
 			
+
 			if( td_status >0 )
 				y = ft6x06_read_y();
 			
@@ -347,6 +283,7 @@ int main(void)
 				lcd_clear_screen(LCD_COLOR_BLACK);
 				state = MAIN_MENU;
 			}			
+
 		}
 		
 		if(state == MAIN_GAME){
@@ -360,10 +297,18 @@ int main(void)
 				
 				// TOGGLE LED ===========================================================
 				// Increment the counter & reset to zero if it reached TIMER_A_CYCLES
-				counterA = ((counterA+1)%TIMER_A_CYCLES);
-		
-				// Toggle Blue LED every time the counter resets
-				if(counterA==0);
+			counterA = ((counterA+1)%TIMER_A_CYCLES);
+			update_bullets();
+			// Toggle Blue LED every time the counter resets
+			if(counterA%10==0) {
+				update_LCD();
+				update_enemies();
+				if(counterA==0){
+					if(pexp_read_buttons(I2C1_BASE, &data) != I2C_OK);
+					if(data && PEXP_BUTTON_DOWN) fire_bullet(true, 0, 0);
+				}
+				// Initialize ADC Read
+				myADC->PSSI = ADC_PSSI_SS2;
 				
 				
 				// TOGGLE WRITE MODE ====================================================
@@ -392,7 +337,6 @@ int main(void)
 				if(counterB==0) {
 				}
 			}
-
 			//*************************************************************************
 			// ADC0SS2 INTERRUPT HANDLING
 			//*************************************************************************
@@ -404,7 +348,10 @@ int main(void)
 				x_value = (uint32_t)(myADC->SSFIFO2 & 0xFFF);
 				y_value = (uint32_t)(myADC->SSFIFO2 & 0xFFF);
 				
-				ship_move(x_value, y_value);
+			if(x_value >= 0xBFD)
+				update_player(true);
+			else if (x_value <= 0x3FF)
+				update_player(false);
 			}
 		}
 		
