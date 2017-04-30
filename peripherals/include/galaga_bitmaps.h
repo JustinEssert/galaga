@@ -67,7 +67,7 @@ void lcd_clear_Image(
 );
 
 void itoa(
-	uint16_t source,
+	uint32_t source,
 	char* dest_ADDRESS_OF_SIZE_NINE_CHAR_ARRAY_PLEASE_AND_THANK_YOU
 );
 #endif

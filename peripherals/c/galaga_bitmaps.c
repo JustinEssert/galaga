@@ -1591,7 +1591,7 @@ const uint8_t galaga_up_left_m0[] =
 **********************************************************/
 
 // must hand in size 9 char array
-void itoa(uint16_t source, char* dest_ADDRESS_OF_SIZE_NINE_CHAR_ARRAY_PLEASE_AND_THANK_YOU){
+void itoa(uint32_t source, char* dest_ADDRESS_OF_SIZE_NINE_CHAR_ARRAY_PLEASE_AND_THANK_YOU){
 	char* a = dest_ADDRESS_OF_SIZE_NINE_CHAR_ARRAY_PLEASE_AND_THANK_YOU;
 	uint8_t temp;
 	int index = 8;
@@ -1623,7 +1623,10 @@ void lcd_print_stringXY(
 	//Enter loop to parse through each character of the message
 	while(*msg != 0){
 		//Find the index of the character for this iteration of the loop
+		
 		int index = ((int)*msg - 32) * 48;
+		
+		put_string(*msg);
 		//Increment msg so that it points to the next character in the message
 		msg++;
 		//If the character is ' ' and the iteration is at the begining of a line, skip the space
@@ -1647,7 +1650,7 @@ void lcd_print_stringXY(
 		else X++;
 	}
 
-
+	put_string('\n');
 
 }
 void lcd_clear_Image(
