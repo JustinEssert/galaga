@@ -9,6 +9,25 @@
 #define       FONT_HEIGHT     16
 #define       FONT_WIDTH      17
 
+#define				SHIP_COLOR_1				0xF800 // Red
+#define				SHIP_COLOR_2				0x001F // Blue
+#define				SHIP_COLOR_3				0xFFFF // White
+
+#define				GALAGA_COLOR_1			0xF800 // Red
+#define				GALAGA_COLOR_2			0xFFE0 // Yellow
+#define				GALAGA_COLOR_3			0x068C // Green-Blue
+
+#define				BEE_COLOR_1					0xFFE0 // Yellow
+#define				BEE_COLOR_2					0x001F // Blue
+#define				BEE_COLOR_3					0xF800 // Red
+
+#define				BUTTERFLY_COLOR_1		0xF800 // Red
+#define				BUTTERFLY_COLOR_2		0x001F // Blue
+#define				BUTTERFLY_COLOR_3		0xFFFF // White
+
+#define				UNIT_WIDTH					24
+#define				UNIT_HEIGHT					24
+
 /* Font data for Sitka Small 12pt */
 extern const uint8_t sitkaSmall_12ptBitmaps[];
 
