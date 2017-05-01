@@ -48,12 +48,16 @@
 #define PLAYER_START_Y							30
 
 #define NUM_UNITS										17
+
 #define UNIT_SIZE										24
 
 #define SPACING											30
 #define ROW_1_START									150
 #define ROW_2_START									180
 #define ROW_3_START									180
+
+#define NUM_HIGH_SCORES							5
+
 
 #define DELAY_SMALL									-5
 #define DELAY_LARGE									-40
@@ -72,7 +76,7 @@
 #define HITBOX_BUFFER								1
 
 void game_init();
-void update_enemies();
+bool update_enemies();
 void update_player(bool left);
 
 //*****************************************************************************
@@ -83,5 +87,16 @@ void update_player(bool left);
 //*****************************************************************************
 void update_bullets();
 //void update_LCD();
+
+
+
+void print_main_menu();
+void print_game_over();
+
+void pull_high_scores();
+bool push_high_scores(char* initials);
+void print_high_scores();
+
+void high_scores_test();
 
 #endif

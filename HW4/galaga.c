@@ -27,7 +27,7 @@
 #include "lcd.h"
 #include "galaga_bitmaps.h"
 #include "galaga.h"
-
+#include "eeprom.h"
 
 typedef enum direction {
 	DIR_U,
@@ -76,6 +76,9 @@ typedef struct bullet{
 short player_lives = PLAYER_START_LIVES;
 
 uint32_t high_score = 0, player_score=0;
+uint32_t num_enemies= NUM_UNITS-1;
+
+uint32_t high_scores[5];
 
 unit_t units[NUM_UNITS];
 bullet_t player_bullets[NUM_PLAYER_BULLETS];
@@ -306,7 +309,7 @@ void fire_bullet (bool player_bullet, uint16_t x, uint16_t y) {
 		for(i=0;i<NUM_PLAYER_BULLETS;i++){
 			if(!player_bullets[i].active){
 				player_bullets[i].pos.x = units[0].pos.x + UNIT_SIZE/2;
-				player_bullets[i].pos.y = units[0].pos.y;
+				player_bullets[i].pos.y = units[0].pos.y + UNIT_SIZE;
 				player_bullets[i].active = true;
 				i=NUM_PLAYER_BULLETS;
 			}
@@ -330,12 +333,14 @@ void fire_bullet (bool player_bullet, uint16_t x, uint16_t y) {
 //	Summary: Updates all of the enemies with respect to their move state
 // 
 //*****************************************************************************
-void update_enemies() {
+bool update_enemies() {
 	uint8_t i;
 	uint16_t x_old, y_old;
+
 	for(i=1; i<NUM_UNITS; i++) {
 		
 		if(units[i].active){
+			num_enemies++;
 			lcd_clear_Image(units[i].pos.x, units[i].pos.y);
 		}
 		
@@ -424,9 +429,12 @@ void update_enemies() {
 				units[i].formation_index--;
 			} else {
 				units[i].active = false;
+				num_enemies--;
 			}
 		}
 	}
+	if(num_enemies <= 0) return true;
+	return false;
 }
 
 //*****************************************************************************
@@ -521,3 +529,129 @@ void update_player(bool left) {
 }
 
 
+void print_main_menu(){
+	char title[] = "--GALAGA--";
+	char start[] = "START GAME";
+	char scores[] = "HIGH SCORE";
+
+	lcd_print_stringXY(title, 2, 5, GALAGA_COLOR_1, LCD_COLOR_BLACK );
+	lcd_print_stringXY(start, 2, 11, GALAGA_COLOR_2, LCD_COLOR_BLACK );
+	lcd_print_stringXY(scores, 2,14, GALAGA_COLOR_2, LCD_COLOR_BLACK );
+}
+void print_game_over(){
+	static bool state = false;
+	char gameOver[] = "-GAME  OVER-";
+	char score[] = "SCORE:";
+	char msg[] = "TAP TO CONT";
+	char score_value[9];
+	
+	itoa(player_score, score_value);
+	
+	if (state){
+			lcd_print_stringXY(gameOver, 1, 5, GALAGA_COLOR_1, LCD_COLOR_BLACK );
+			state = false;
+	} else {
+			lcd_print_stringXY(gameOver, 1, 5, LCD_COLOR_BLACK, LCD_COLOR_BLACK );
+			state = true;
+	}
+	
+	lcd_print_stringXY(score, 0, 11, GALAGA_COLOR_2, LCD_COLOR_BLACK );
+	lcd_print_stringXY(score_value, 6, 11, GALAGA_COLOR_2, LCD_COLOR_BLACK );
+
+	lcd_print_stringXY(msg, 1,16, GALAGA_COLOR_2, LCD_COLOR_BLACK );
+	
+		
+	
+	
+}
+
+void print_high_scores(){
+	char banner[] = "HIGH SCORES";
+	char msg[] = "MAIN MENU";
+	char* initials;
+	char score_value[9];
+	int i;
+	
+	lcd_print_stringXY(banner, 1, 5, GALAGA_COLOR_1, LCD_COLOR_BLACK );
+	lcd_print_stringXY(msg, 2,18, GALAGA_COLOR_2, LCD_COLOR_BLACK );
+
+	pull_high_scores();
+	
+	for (i = 0; i < NUM_HIGH_SCORES; i++){
+		initials = (char*) &high_scores[i];
+		itoa( (high_scores[i]&0xFFFF) ,score_value);
+		lcd_print_stringXY(initials, 1,(7+i), GALAGA_COLOR_3, LCD_COLOR_BLACK );
+		lcd_print_stringXY(score_value, 5,(7+i), GALAGA_COLOR_3, LCD_COLOR_BLACK );
+}
+	
+	
+}
+void pull_high_scores(){
+	uint8_t read_val;
+	uint16_t addr;
+	int i;
+	
+	addr = ADDR_START;
+	for( i = 0; i < NUM_HIGH_SCORES; i++){
+		high_scores[i] = 0;
+		eeprom_byte_read(I2C1_BASE,addr, &read_val);
+		high_scores[i] |= read_val;
+		addr++;
+			
+		eeprom_byte_read(I2C1_BASE,addr, &read_val);
+		high_scores[i] |= read_val << 4;
+		addr++;
+			
+		eeprom_byte_read(I2C1_BASE,addr, &read_val);
+		high_scores[i] |= (read_val & 0xFC ) << 12; // sets last char to null
+		addr++;	
+	}
+	
+}
+bool push_high_scores(char* initials){
+	int low_score = 0xFFFF; //value of lowest high score
+	int low_index = 0; //index of lowest high score
+	uint8_t write_val;
+	uint16_t addr;
+	int i;
+	
+	pull_high_scores();
+	
+	for(i = 0; i < NUM_HIGH_SCORES; i++){
+		if( (high_scores[i] & 0xFFFF) < low_score){
+			low_index = i;
+			low_score = high_scores[i] & 0xFFFF;
+		}
+	}
+	printf("low index: %d; low score:\n\r",low_score);
+
+	if ( player_score > low_score ){
+		addr = ADDR_START;
+		addr += 3*low_index;
+		write_val = player_score & 0xFF;
+		eeprom_byte_write(I2C1_BASE,addr, write_val);
+		addr++;
+		
+		write_val = (player_score >> 4) & 0xFF;
+		eeprom_byte_write(I2C1_BASE,addr, write_val);
+		addr++;
+		
+		write_val = (uint8_t) *initials;
+		write_val &= 0xFC;	 // sets last char to null term regardless of current value
+		eeprom_byte_write(I2C1_BASE,addr, write_val);
+		printf("return true");
+		return true;
+		
+	} else {
+		printf("return false");
+		return false;
+	}
+	
+}
+
+
+void high_scores_test(){
+	pull_high_scores();
+	player_score = 99999999;
+	push_high_scores("kek");
+}
