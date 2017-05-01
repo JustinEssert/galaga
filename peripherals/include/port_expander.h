@@ -52,7 +52,7 @@
 // Returns
 // I2C_OK if the byte was read from the EEPROM.
 //*****************************************************************************
-i2c_status_t pexp_button_read 
+i2c_status_t pexp_read_buttons
 (
 	uint32_t  i2c_base,
 	uint8_t   *data 

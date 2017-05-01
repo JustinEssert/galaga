@@ -488,6 +488,8 @@
               <FileName>port_expander.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\peripherals\c\port_expander.c</FilePath>
+            </File>
+            <File>
               <FileName>ft6x06.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\peripherals\c\ft6x06.c</FilePath>
@@ -496,11 +498,6 @@
               <FileName>eeprom.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\peripherals\c\eeprom.c</FilePath>
-            </File>
-            <File>
-              <FileName>ft6x06.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\peripherals\c\ft6x06.c</FilePath>
             </File>
           </Files>
         </Group>

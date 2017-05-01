@@ -350,7 +350,7 @@ int main(void)
 			}
 
 			
-		
+		}
 		if(state == NEW_RECORD){
 			if(interrupt_timerB){					
 				// CLEAR INTERRUPT INDICATOR
@@ -358,7 +358,7 @@ int main(void)
 				// Initialize ADC Read
 				myADC->PSSI = ADC_PSSI_SS2;
 			}
-			pexp_button_read( I2C1_BASE, &pbData );
+			pexp_read_buttons( I2C1_BASE, &pbData );
 			if ( pbData & 0x8 ){
 				if(cursor_pos >=2 ){
 					push_high_scores(initial);
