@@ -471,5 +471,10 @@ bool push_high_scores(char* initials){
 	
 }
 
+void print_new_record(){
+	
+}
+
+
 
 

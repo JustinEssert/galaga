@@ -29,6 +29,7 @@
 #include "eeprom.h"
 #include "galaga.h"
 #include "ft6x06.h"
+#include "port_expander.h"
 
 typedef enum {
 	MAIN_MENU,
@@ -105,6 +106,10 @@ void initialize_hardware(void)
 	DisableInterrupts();
   ft6x06_init();
   EnableInterrupts();
+	
+	// INITIALIZE PUSH BUTTONS
+	
+	port_expander_init();
 	
 }
 
@@ -273,8 +278,15 @@ int main(void)
 	i2c_status_t td_status;
 	uint16_t x = 0;
 	uint16_t y = 0;
-	gameState_t state = HIGH_SCORE;
+	gameState_t state = NEW_RECORD;
 	uint16_t addr;
+	int i,j;
+	
+	int cursor_pos = 0;  // cursor position
+	int selected_char = 0; // A is 0, B is 1...
+	uint8_t pbData = 0;
+	char initial[4];
+	bool foo = false;
 	
 	// INITIALIZE FUNCTIONS =====================================================
 	initialize_hardware();
@@ -425,14 +437,63 @@ int main(void)
 			
 			if ( (y < 120) && (y > 10) ){
 				lcd_clear_screen(LCD_COLOR_BLACK);
+				
 				state = HIGH_SCORE;
+				for(i = 0; i < NUM_HIGH_SCORES; i++){
+					if(player_score > high_scores[i])
+						print_new_record();
+						cursor_pos = 0;
+						selected_char = 0;
+						state = NEW_RECORD;
+				}		
 			}			
 		}
 		
 		if(state == NEW_RECORD){
+			if(interrupt_timerB){					
+				// CLEAR INTERRUPT INDICATOR
+				interrupt_timerB = false;
+				// Initialize ADC Read
+				myADC->PSSI = ADC_PSSI_SS2;
+			}
 			
+			if(interrupt_adc0ss2){	
+				// CLEAR INTERRUPT INDICATOR
+				interrupt_adc0ss2 = false;
+				x_value = (uint32_t)(myADC->SSFIFO2 & 0xFFF);
+				y_value = (uint32_t)(myADC->SSFIFO2 & 0xFFF);
+				
+					// Check if the x value is >= 75% or <= 25%
+					// if(x_value >= 0xBFD)				;
+					// else if(x_value<= 0x3FF)		;
+	
+					// Check if the y value is >= 75% or <= 25%
+					if(y_value >= 0xBFD)	selected_char = (selected_char+1)%26;
+					else if(y_value <= 0x3FF) selected_char = selected_char-1;
+					if (selected_char < 0)
+					initial[cursor_pos] = (char)(selected_char + 65);				
+			}
 			
+			pexp_button_read( I2C1_BASE, &pbData );
+			if ( pbData & 0x8 ){
+				if(cursor_pos >=2 ){
+					push_high_scores(initial);
+					print_high_scores();
+					state = HIGH_SCORE;
+					continue;
+				} else {
+					initial[cursor_pos] = (char)(selected_char + 65);
+					cursor_pos++;
+				}
+				
+			} else if ( (pbData & 0x2) && (cursor_pos >0) ){
+				initial[cursor_pos] = '\0';
+				cursor_pos--;
+				selected_char = ((int) initial[cursor_pos] )-65;
+			}
 			
+			lcd_print_stringXY(initial, 12,7, GALAGA_COLOR_3, LCD_COLOR_BLACK );			
 		}
 	}
 }
+

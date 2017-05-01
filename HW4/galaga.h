@@ -50,6 +50,9 @@
 #define NUM_UNITS										17
 #define NUM_HIGH_SCORES							5
 
+extern uint32_t player_score;
+extern uint32_t high_scores[5];
+
 
 void game_init();
 void update_enemies();
@@ -63,6 +66,7 @@ void print_game_over();
 void pull_high_scores();
 bool push_high_scores(char* initials);
 void print_high_scores();
+void print_new_record();
 
 void high_scores_test();
 
