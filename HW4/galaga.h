@@ -78,9 +78,8 @@ extern uint32_t high_scores[5];
 #define TRACKING_SPEED							1
 #define HITBOX_BUFFER								1
 
-void game_init();
-bool update_enemies();
-void update_player(bool left);
+
+
 
 //*****************************************************************************
 // Function Name: update_bullets
@@ -89,18 +88,121 @@ void update_player(bool left);
 // 
 //*****************************************************************************
 void update_bullets();
-bool update_LCD();
-void level_up();
 
 
+//*****************************************************************************
+// Function Name: update_LCD
+//*****************************************************************************
+//	Summary: prints a new frame to the LCD
+//
+//*****************************************************************************
+void update_LCD();
+//*****************************************************************************
+// Function Name: game_init
+//*****************************************************************************
+//	Summary: Initializes an array of character units
+// 
+//	Parameters:
+//
+//	draw: 				Pass in true to draw or false to erase
+//
+//*****************************************************************************
+void game_init();
+
+//*****************************************************************************
+// Function Name: fire_bullet
+//*****************************************************************************
+//	Summary: Creates a bullet unless all available bullets are active
+//
+//  Parameters:
+//			player_bullet:			true if the player fires the bullet
+//													false if an enemie fired the bullet
+//			
+// 			x										starting x coordinate of bullet
+//
+//			y										starting y coordinate of bullet
+//*****************************************************************************
+void fire_bullet(
+	bool player_bullet, 
+	uint16_t x, 
+	uint16_t y
+);
+//*****************************************************************************
+// Function Name: update_enemies
+//*****************************************************************************
+//	Summary: Updates all of the enemies with respect to their move state
+// 
+//*****************************************************************************
+bool update_enemies();
+
+//*****************************************************************************
+// Function Name: update_player
+//*****************************************************************************
+//	Summary: Updates the position of player
+// 
+//*****************************************************************************	
+void update_player(bool left);
+
+	
+	
+//*****************************************************************************
+// Function Name: print_main_menu
+//*****************************************************************************
+//	Summary: prints text on main menu
+// 
+//*****************************************************************************	
 void print_main_menu();
+
+//*****************************************************************************
+// Function Name: print_game_over
+//*****************************************************************************
+//	Summary: prints text on game over screen
+// 
+//*****************************************************************************	
 void print_game_over();
 
-void pull_high_scores();
-bool push_high_scores(char* initials);
+//*****************************************************************************
+// Function Name: print_high_scores
+//*****************************************************************************
+//	Summary: prints text on high scores screen
+// 
+//*****************************************************************************	
 void print_high_scores();
+
+//*****************************************************************************
+// Function Name: pull_high_scores
+//*****************************************************************************
+//	Summary: Reads high scores and names from EEPROM to highscores[] and
+//					 initials[] respectively
+// 
+//*****************************************************************************	
+void pull_high_scores();
+
+//*****************************************************************************
+// Function Name: push_high_scores
+//*****************************************************************************
+//	Summary: writes player score and name to EEPROM to after verifying
+//					 player's score is highest than lowest on leaderboard
+//
+//	Returs:	true - score written
+//					false - score not high enough to be written
+//
+//*****************************************************************************	
+bool push_high_scores(char* initials);
+
+//*****************************************************************************
+// Function Name: print_new_record
+//*****************************************************************************
+//	Summary: prints text on new high score/name entry screen
+// 
+//*****************************************************************************	
 void print_new_record();
 
-void high_scores_test();
-
+//*****************************************************************************
+// Function Name: print_pause
+//*****************************************************************************
+//	Summary: prints text on pause screen
+// 
+//*****************************************************************************	
+void print_pause();
 #endif

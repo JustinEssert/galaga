@@ -397,8 +397,11 @@ bool update_enemies() {
 	uint8_t i;
 	uint16_t x_old, y_old, num_enemies = 0;
 	char test[10];
+  long dX, dY;
 
 	for(i=1; i<NUM_UNITS; i++) {
+		x_old = units[i].pos.x;
+		y_old = units[i].pos.y;
 		
 		if(units[i].active){
 			num_enemies++;
@@ -467,20 +470,18 @@ bool update_enemies() {
 		{
 			
 		}
-
+		dX = (long)units[i].pos.x - x_old;
+		dY = (long)units[i].pos.y - y_old;
 		// Update Direction based on the move
-		if(units[i].pos.x - x_old > 0){
-			if(units[i].pos.y - y_old >= 0) units[i].dir = DIR_UR;
-			else 														units[i].dir = DIR_DR;
-		}
-		else if(units[i].pos.x - x_old < 0){
-			if(units[i].pos.y - y_old >= 0) units[i].dir = DIR_UL;
-			else 														units[i].dir = DIR_DL;
-		} 
-		else {
-			if(units[i].pos.y - y_old >= 0) units[i].dir = DIR_U;
-			else 														units[i].dir = DIR_D;
-		}
+		
+		if((dX > 0)&&(dY > 0))			units[i].dir = DIR_UL;
+		else if((dX > 0)&&(dY < 0))	units[i].dir = DIR_DL;
+		else if((dX < 0)&&(dY > 0))		units[i].dir = DIR_UR;
+		else if((dX < 0)&&(dY < 0)) 	units[i].dir = DIR_DR;
+		else if((dY < 0))						units[i].dir = DIR_D;
+		else 													units[i].dir = DIR_U;
+			
+		
 		
 		if(units[i].active && units[i].move_state!=EXPLOSION)
 		{
@@ -648,31 +649,45 @@ void update_player(bool left) {
 }
 
 
+
+//*****************************************************************************
+// Function Name: print_main_menu
+//*****************************************************************************
+//	Summary: prints text on main menu
+// 
+//*****************************************************************************	
 void print_main_menu(){
-	char title[] = "--GALAGA--";
+	char title[] = "GALAGA";
 	char start[] = "START GAME";
 	char scores[] = "HIGH SCORE";
   
-	lcd_print_stringXY(title, 2, 5, GALAGA_COLOR_1, LCD_COLOR_BLACK );
+	// Print title and menu items
+	lcd_print_stringXY(title, 4, 5, GALAGA_COLOR_1, LCD_COLOR_BLACK );
 	lcd_print_stringXY(start, 2, 11, GALAGA_COLOR_2, LCD_COLOR_BLACK );
 	lcd_print_stringXY(scores, 2,14, GALAGA_COLOR_2, LCD_COLOR_BLACK );
 }
+
+//*****************************************************************************
+// Function Name: print_game_over
+//*****************************************************************************
+//	Summary: prints text on game over screen
+// 
+//*****************************************************************************	
 void print_game_over(){
 	static bool state = false;
-	char gameOver[] = "-GAME--OVER-";
+	char gameOver[] = "GAME  OVER";
 	char score[] = "SCORE:";
 	char msg[] = "TAP TO CONT";
 	char score_value[9];
 	
+	// convert player's score to a string that can be printeds
 	itoa(player_score, score_value);
 	
-	lcd_print_stringXY(gameOver, 1, 5, LCD_COLOR_BLACK, LCD_COLOR_BLACK );
 
-
-	
+	// Print score and user prompt	
+	lcd_print_stringXY(gameOver, 2, 5, GALAGA_COLOR_1, LCD_COLOR_BLACK );
 	lcd_print_stringXY(score, 0, 11, GALAGA_COLOR_2, LCD_COLOR_BLACK );
 	lcd_print_stringXY(score_value, 6, 11, GALAGA_COLOR_2, LCD_COLOR_BLACK );
-
 	lcd_print_stringXY(msg, 1,16, GALAGA_COLOR_2, LCD_COLOR_BLACK );
 	
 		
@@ -680,50 +695,89 @@ void print_game_over(){
 	
 }
 
+
+//*****************************************************************************
+// Function Name: print_high_scores
+//*****************************************************************************
+//	Summary: prints text on high scores screen
+// 
+//*****************************************************************************	
 void print_high_scores(){
 	char banner[] = "HIGH SCORES";
 	char msg[] = "MAIN MENU";
+	char you[] = "YOU";
 	char* initials;
 	char score_value[9];
 	int i;
 	
+	// Print banner messages
 	lcd_print_stringXY(banner, 1, 5, GALAGA_COLOR_1, LCD_COLOR_BLACK );
 	lcd_print_stringXY(msg, 2,18, GALAGA_COLOR_2, LCD_COLOR_BLACK );
 
+	// Update scores before printing
 	pull_high_scores();
 	
+	
+	// For each score
 	for (i = 0; i < NUM_HIGH_SCORES; i++){
 		
+		// cast initials back to char array
 		initials = (char*)(hs_initials+i);
+		
+		// convert score to printable string
 		itoa( high_scores[i] ,score_value);
+		
+		// print name next to score
 		lcd_print_stringXY(initials, 1,(7+i), GALAGA_COLOR_3, LCD_COLOR_BLACK );
-		lcd_print_stringXY(score_value, 5,(7+i), GALAGA_COLOR_3, LCD_COLOR_BLACK );
-}
-		itoa( player_score ,score_value);
-		lcd_print_stringXY(score_value, 5,(7+6), GALAGA_COLOR_3, LCD_COLOR_BLACK );
+		lcd_print_stringXY(score_value, 5,(7+i), GALAGA_COLOR_3, LCD_COLOR_BLACK );	
+	}
+	
+	// convert player score to printable string
+	itoa( player_score ,score_value);
+	
+	// print player score below leaderboards
+	lcd_print_stringXY(you, 1,(7+6), GALAGA_COLOR_3, LCD_COLOR_BLACK );
+	lcd_print_stringXY(score_value, 5,(7+6), GALAGA_COLOR_3, LCD_COLOR_BLACK );
 
 	
 }
+
+//*****************************************************************************
+// Function Name: pull_high_scores
+//*****************************************************************************
+//	Summary: Reads high scores and names from EEPROM to highscores[] and
+//					 initials[] respectively
+// 
+//*****************************************************************************	
 void pull_high_scores(){
 	uint8_t read_val;
 	uint16_t addr;
 	char* initials;
 	int i,j;
 	
+	// set start address
 	addr = ADDR_START;
+	
+	// for each high score slot
 	for( i = 0; i < NUM_HIGH_SCORES; i++){
 		
+		// clear old data
 		high_scores[i] = 0;
 		
+		// write each byte the correct location within the uint32
 		for( j = 0; j < 4; j++){	
 			eeprom_byte_read(I2C1_BASE,addr, &read_val);
 			high_scores[i] |= read_val << (j*8);
 			addr++;
 		}
 		
-		
+		// wipe old name data (sets all to null terminator)
 		hs_initials[i] = 0;
+		
+		// cast hs_initials[i] to char array for easier access
 		initials = (char*)&hs_initials[i];
+		
+		// write name data (initials) to first three indexes
 		for( j = 0; j < 3; j++){
 			eeprom_byte_read(I2C1_BASE,addr, &read_val);
 			initials[j] = (char)read_val;
@@ -733,15 +787,20 @@ void pull_high_scores(){
 	
 }
 
-void high_scores_test(){
-	char kek[4]= "kek";
-	pull_high_scores();
-	player_score = 12543678;
-	push_high_scores(kek);
-	player_score = 23654789;
-	push_high_scores(kek);
-}
-
+//*****************************************************************************
+// Function Name: push_high_scores
+//*****************************************************************************
+//	Summary: writes player score and name to EEPROM to after verifying
+//					 player's score is highest than lowest on leaderboard
+//
+//	Params:
+//					 initials - the playser's entered initials
+//
+//	Returns:
+//					 true - score written
+//					 false - score not high enough to be written
+//
+//*****************************************************************************	
 bool push_high_scores(char* initials){
 	uint32_t low_score = 0xFFFFFFFF; //value of lowest high score
 	int low_index = 0; //index of lowest high score
@@ -749,46 +808,91 @@ bool push_high_scores(char* initials){
 	uint16_t addr;
 	int i,j;
 	
+	// Upadate high scores before making changes
 	pull_high_scores();
 	
+	// Search for value and index of lowest high score
 	for(i = 0; i < NUM_HIGH_SCORES; i++){
 		if( high_scores[i] < low_score){
 			low_index = i;
 			low_score = high_scores[i];
 		}
 	}
-	printf("low index: %d; low score:\n\r",low_score);
 
+	// Only update if player score is greater than lowest score on list
 	if ( player_score > low_score ){
+		
+		// Calculate address and offset of lowest score
 		addr = ADDR_START;
 		addr += 7*low_index;
 		
-		
+		// send each byte of the uint32_t to the EEPROM
 		for(i = 0; i < 4; i++){
 			write_val = ( player_score >> (8*i) ) & 0xFF;
 			eeprom_byte_write(I2C1_BASE,addr, write_val);
 			addr++;
 		}
-		*initials = 'k';
+		
+		// send the first three bytes of name containing char data to EEPROM
 		for(i = 0; i < 3; i++){
 			write_val = (uint8_t) initials[i];
-			eeprom_byte_write(I2C1_BASE,addr, (int)'Z');
+			eeprom_byte_write(I2C1_BASE,addr, (int)initials[i]);
 			addr++;
 		}
-		printf("return true");
 		return true;
-		
 	} else {
-		printf("return false");
 		return false;
 	}
 	
 }
-
+//*****************************************************************************
+// Function Name: print_new_record
+//*****************************************************************************
+//	Summary: prints text on new high score/name entry screen
+// 
+//*****************************************************************************	
 void print_new_record(){
+	char banner[] = "NEW RECORD";
+	char msg0[] = "USE STICK";
+	char msg1[] = "AND R BTN";
+	char msg2[] = "TO ENTER";
+	char msg3[] = "YOUR NAME";
+	char score[] = "SCORE:";
 	
+	char score_value[9];
+	
+	// convert player's score to a string that can be printed
+	itoa(player_score, score_value);
+	
+	// Print title and text entry directions for user
+	lcd_print_stringXY(banner, 2, 3, GALAGA_COLOR_1, LCD_COLOR_BLACK );
+	lcd_print_stringXY(msg0, 2,5, GALAGA_COLOR_2, LCD_COLOR_BLACK );
+	lcd_print_stringXY(msg1, 2,6, GALAGA_COLOR_2, LCD_COLOR_BLACK );
+	lcd_print_stringXY(msg2, 2,7, GALAGA_COLOR_2, LCD_COLOR_BLACK );
+	lcd_print_stringXY(msg3, 2,8, GALAGA_COLOR_2, LCD_COLOR_BLACK );
+
+	// Print players score
+	lcd_print_stringXY(score, 0, 15, GALAGA_COLOR_2, LCD_COLOR_BLACK );
+	lcd_print_stringXY(score_value, 6, 15, GALAGA_COLOR_2, LCD_COLOR_BLACK );
+
 }
 
 
+//*****************************************************************************
+// Function Name: print_pause
+//*****************************************************************************
+//	Summary: prints text on pause screen
+// 
+//*****************************************************************************
+void print_pause(){
+	char title[] = "PAUSED";
+	char start[] = "MAIN MENU";
+	char scores[] = "RESUME";
+  
+	// Print title and menu items
+	lcd_print_stringXY(title, 4, 5, GALAGA_COLOR_1, LCD_COLOR_BLACK );
+	lcd_print_stringXY(start, 2, 11, GALAGA_COLOR_2, LCD_COLOR_BLACK );
+	lcd_print_stringXY(scores, 3,14, GALAGA_COLOR_2, LCD_COLOR_BLACK );
+}
 
 

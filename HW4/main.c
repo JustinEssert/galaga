@@ -32,16 +32,21 @@
 #include "ft6x06.h"
 #include "port_expander.h"
 
+// Game states used in main program loop
 typedef enum {
 	MAIN_MENU,
 	HIGH_SCORE,
 	MAIN_GAME,
 	GAME_OVER,
-	NEW_RECORD
+	NEW_RECORD,
+	PAUSE
 } gameState_t;
 
-bool new_state = true;
+// Var to keep track of game state
+gameState_t state;
 
+// True if entering a new state
+bool new_state = true;
 
 char group[] = "Group27";
 char individual_1[] = "Justin Essert";
@@ -56,7 +61,7 @@ volatile bool interrupt_timerA = false;
 volatile bool interrupt_timerB = false;
 volatile bool interrupt_adc0ss2 = false;
 
-gameState_t state;
+
 
 // Game Variables
 uint8_t placeholder_image[20] = {
@@ -67,7 +72,8 @@ uint8_t placeholder_image[20] = {
 //*****************************************************************************
 // Function Name: initialize_hardware
 //*****************************************************************************
-// Summary: This function initializes the PS2, LCD, Timers, and Switches
+// Summary: This function initializes the PS2, LCD, Timers, Switches
+//					Touchscreen, and Port expander, 
 //
 //*****************************************************************************
 void initialize_hardware(void)
@@ -127,28 +133,110 @@ void initialize_hardware(void)
 //*****************************************************************************
 // Function Name: sw1_debounce
 //*****************************************************************************
-//	Summary: This function tests if SW1 has been pressed for 60ms
+//	Summary: This function tests if SW1 has been pressed for 6 cycles
 //
 //	Returns:
 //
-//	true				SW1 has been pressed for 60ms
-//	false				SW1 has been pressed for less than 60ms or is not pressed
+//	true				SW1 lifted after pressed for 6 cycles
+//	false				All other states
 //
 //*****************************************************************************
 __INLINE static bool sw1_debounce()
 {
   // Counter to determine the length of time that SW1 has been pressed
-	static int cycle = 0;
+	static volatile long long cycle = 0;
   
-	// If SW1 is pressed, increment cycle
-  if(lp_io_read_pin(SW1_BIT)) cycle = (cycle+1);
+	// If SW1 is pressed, increment cycle, return false
+  if(!lp_io_read_pin(SW1_BIT)){
+		cycle++;
+		return false;
+	}
+	// If the button is lifted and has been pressed for > 8 cycles, return true
+  else if(cycle > 6){
+		cycle = 0;
+		return true;
+	}
 	// If SW1 is not pressed, set cycle to 0
-	else cycle = 0;
+	else {
+		cycle = 0;
+		return false;
+	}
 	
-	// If the button has been pressed for >= 60ms, return true
-  return (cycle == 6);
+	
 }
+//*****************************************************************************
+// Function Name: pbRight_debounce
+//*****************************************************************************
+//	Summary: This function tests if PB right has been pressed for 6 cycles
+//
+//	Returns:
+//
+//	true				Pushbutton (R) has been released after being pressed for 6 cycles
+//	false				all other states
+//
+//*****************************************************************************
+__INLINE static bool pbRight_debounce()
+{
+  // Counter to determine the length of time that PBR has been pressed
+	static int cycle = 0;
+	uint8_t data;
+	
+	// read data
+  pexp_read_buttons(I2C1_BASE, &data);
+	
+	// If right PB is pressed, increment cycle and return false
+  if(data & PEXP_BUTTON_RIGHT){
+		cycle = (cycle+1);
+		return false;
+	}
+	// If right PB is not pressed, but cycle is greater than 6, return true
+	else if ( cycle > 6 ){
+		cycle = 0;
+		return true;
+	}
+	// reset cycleelse return false
+	else {
+		cycle = 0;
+		return false;
+	}
+}
+//*****************************************************************************
+// Function Name: pbDown_debounce
+//*****************************************************************************
+//	Summary: This function tests if PB down has been pressed for 6 cycles
+//
+//	Returns:
+//
+//	true				Pushbutton (D) has been released after being pressed for 6 cycles
+//	false				all other states
+//
+//*****************************************************************************
 
+__INLINE static bool pbDown_debounce()
+{
+  // Counter to determine the length of time that PBD has been pressed
+	static int cycle = 0;
+	uint8_t data;
+	
+	// read data
+  pexp_read_buttons(I2C1_BASE, &data);
+	
+	// If down PB is pressed, increment cycle and return false
+  if(data & PEXP_BUTTON_DOWN){
+		cycle = (cycle+1);
+		return false;
+	}
+	// If down PB is not pressed, but cycle is greater than 6, return true
+	else if ( cycle > 6 ){
+		cycle = 0;
+		return true;
+	}
+	// else reset cycle and return false
+	else {
+		cycle = 0;
+		return false;
+	}
+}
 
 //*****************************************************************************
 //*****************************************************************************
@@ -213,9 +301,11 @@ int main(void)
 	i2c_status_t td_status;
 	uint16_t x = 0;
 	uint16_t y = 0;
-	gameState_t state = NEW_RECORD;
+	gameState_t state;
 	uint16_t addr;
 	int i,j;
+	bool toggle;
+	char prev[4] = "   ";
 	
 	int cursor_pos = 0;  // cursor position
 	int selected_char = 0; // A is 0, B is 1...
@@ -224,6 +314,7 @@ int main(void)
 	bool foo = false;
 	
 	extern uint16_t level;
+
 	
 	// INITIALIZE FUNCTIONS =====================================================
 	initialize_hardware();
@@ -240,6 +331,14 @@ int main(void)
   put_string("\n\r");  
   put_string("************************************\n\r");
 	
+
+	/* USE TO WIPE EEPROM
+	addr = ADDR_START;
+	for ( i = 0; i < 7*5; i++){
+		eeprom_byte_write(I2C1_BASE,addr, 0);
+		addr++;
+	}
+	*/
 
 	// Set state to Main Menu and start the while loop
 	state=MAIN_MENU;
@@ -259,7 +358,10 @@ int main(void)
 			else if(state==MAIN_GAME) game_init();
 			// If state is game over the initialize the game over menu
 			else if(state==GAME_OVER) print_game_over();
-			
+			// If state is new record, print the new record screen
+			else if(state==NEW_RECORD) print_new_record();
+			// If state is new pause, print the pause screen
+			else if(state==PAUSE) print_pause();
 		}
 		if(interrupt_timerA){
 			interrupt_timerA = false;
@@ -304,11 +406,32 @@ int main(void)
               }
 				    }		
 			    }
-				}	 
-        
+				}	else if(state == PAUSE){
+					// If the Y is the MAIN MENU button then go to MAIN MENU
+					if ((y >120)&& (y < 170)){
+						state = MAIN_MENU;
+						new_state = true;
+					}
+					// If the Y is the RESUME button then return to MAIN GAME
+					else if ((y > 70) && ( y < 120 )){
+						lcd_clear_screen(LCD_COLOR_BLACK);
+						state = MAIN_GAME;
+					}
+				}
+			
  
 			}
-			if (state==MAIN_GAME){
+			// if SW1 is pressed whiled paused, resume MAIN_GAME
+			if (state==PAUSE  && sw1_debounce()  ){
+					lcd_clear_screen(LCD_COLOR_BLACK);
+					state = MAIN_GAME;
+			}
+			if (state==MAIN_GAME && !new_state){
+				if(sw1_debounce()){
+					state = PAUSE;
+					new_state  = true;
+					put_string("dddd");
+				}
 				// Update bullet positions
 				update_bullets();
 				
@@ -336,8 +459,7 @@ int main(void)
 					}
 				}	
 			}
-		}
-
+	}
 		//*************************************************************************
 		// TIMER B INTERRUPT HANDLING
 		//*************************************************************************
@@ -349,34 +471,44 @@ int main(void)
 			// Increment the counter & reset to zero if it reached TIMER_B_CYCLES
 			counterB = ((counterB+1)%TIMER_B_CYCLES);
 
-			
-		}
-		if(state == NEW_RECORD){
-			if(interrupt_timerB){					
-				// CLEAR INTERRUPT INDICATOR
-				interrupt_timerB = false;
-				// Initialize ADC Read
+			if(state == MAIN_GAME){
+				if(counterB==0) {
+					update_LCD();
+				}	
+			} else if (state == NEW_RECORD){
 				myADC->PSSI = ADC_PSSI_SS2;
 			}
-			pexp_read_buttons( I2C1_BASE, &pbData );
-			if ( pbData & 0x8 ){
-				if(cursor_pos >=2 ){
+
+			
+		}
+		if(state == NEW_RECORD){			
+			// If right is pressed
+			if (pbRight_debounce()){
+				// If cursor is at position 2, submit score and enter HIGH_SCORE
+				if( cursor_pos ==2 ){
 					push_high_scores(initial);
+					pull_high_scores();
 					print_high_scores();
 					state = HIGH_SCORE;
+					new_state = true;
 					continue;
+				// Otherwise set selected character and increment cursor
 				} else {
-					initial[cursor_pos] = (char)(selected_char + 65);
+					initial[cursor_pos] = (char)selected_char + 'A';
+					selected_char = 0;
 					cursor_pos++;
 				}
-				
-			} else if ( (pbData & 0x2) && (cursor_pos >0) ){
-				initial[cursor_pos] = '\0';
-				cursor_pos--;
-				selected_char = ((int) initial[cursor_pos] )-65;
-			}
 			
-			lcd_print_stringXY(initial, 12,7, GALAGA_COLOR_3, LCD_COLOR_BLACK );			
+			// If down is pressed and cursor is not at position 0
+			} else if ( pbDown_debounce() && (cursor_pos >0) ){
+				// Delete curret value and decrement cursor position
+				initial[cursor_pos] = ' ';
+				cursor_pos--;
+				selected_char = ((int) initial[cursor_pos] -'A');
+			}
+			// Print entered characters
+
+				lcd_print_stringXY(initial, 5,11, GALAGA_COLOR_3, LCD_COLOR_BLACK );		
 		}
 		//*************************************************************************
 		// ADC0SS2 INTERRUPT HANDLING
@@ -395,11 +527,15 @@ int main(void)
 				else if (x_value <= 0x3FF)
 					update_player(false);
 			} else if(state == NEW_RECORD){
-          // Check if the y value is >= 75% or <= 25%
+          // Check if the y value is >= 75% increment currently selected character
 					if(y_value >= 0xBFD)	selected_char = (selected_char+1)%26;
+					// if y value is <=25%, decrement instead
 					else if(y_value <= 0x3FF) selected_char = selected_char-1;
 					if (selected_char < 0)
-					initial[cursor_pos] = (char)(selected_char + 65);	
+						selected_char = 25;
+					// Set new character in cursor position
+					if(cursor_pos>0) prev[cursor_pos-1] = initial[cursor_pos-1];
+					initial[cursor_pos] = (char)selected_char+'A';	
       }
 		}
 	}

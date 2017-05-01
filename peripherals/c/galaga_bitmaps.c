@@ -1210,26 +1210,6 @@ const uint8_t shrapnel[] =
 * Returns:
 *  Nothing
 **********************************************************/
-
-// must hand in size 9 char array
-void itoa(uint32_t source, char* dest_ADDRESS_OF_SIZE_NINE_CHAR_ARRAY_PLEASE_AND_THANK_YOU){
-	char* a = dest_ADDRESS_OF_SIZE_NINE_CHAR_ARRAY_PLEASE_AND_THANK_YOU;
-	uint8_t temp;
-	int index = 8;
-	
-	a[index] = '\0';
-	index --;
-	
-	while ( index >= 0){
-		temp = source%10;
-		a[index] = (char)(temp + 48);
-		
-		source /= 10;
-		index --;
-	}
-	return;	
-}
-
 void lcd_print_stringXY(
     char *msg,
     int8_t X,
@@ -1274,6 +1254,15 @@ void lcd_print_stringXY(
 	}
 
 }
+
+/*******************************************************************************
+* Function Name: lcd_clear_Image
+********************************************************************************
+* Summary: clears a block of lcd that is the same size as one of the game sprites
+*          
+* Return:
+*  Nothing
+*******************************************************************************/ 
 void lcd_clear_Image(
 	  int16_t x,
 		int16_t y
@@ -1282,6 +1271,15 @@ void lcd_clear_Image(
 	lcd_draw_image(x, 24, y, 24, ship_m0, LCD_COLOR_BLACK, LCD_COLOR_BLACK);
 }
 
+
+/*******************************************************************************
+* Function Name: lcd_draw_explosion
+********************************************************************************
+* Summary: draws explotion at the given coordinates
+*          
+* Return:
+*  Nothing
+*******************************************************************************/ 
 void lcd_draw_explosion(
 	  int16_t x,
 		int16_t y
@@ -1291,6 +1289,22 @@ void lcd_draw_explosion(
 }
 
 
+/*******************************************************************************
+* Function Name: lcd_print_Image
+********************************************************************************
+* Summary: draws sprite at given location. Sprite can be flipped over either
+*					 axis and angled sprites are supported for units that have them.
+*
+* Params:		x			x coordinate of image corner
+*						y			y coordinate of image corner
+*						type	the unit type. determines sprite that will be drawn
+*						dir		direction unit is facing. determins whether x and y will be
+*										flipped, and whether the angled sprite will be used
+*
+*
+* Return:
+*  Nothing
+*******************************************************************************/ 
 void lcd_print_Image(
     int16_t x,
 		int16_t y,
@@ -1298,43 +1312,72 @@ void lcd_print_Image(
 		short dir
 )
 {
-	bool flipX;
-	bool flipY;
+	bool flipX; // if x coordinates need to be flipped
+	bool flipY; // if y coordinates need to be flipped
+	bool angle; // if angled sprite must be used
+	
+	// Determine if the sprite must be flipped in either direction
+	// and if an angled sprite must be used based on the dir param
 	switch(dir){
-		case 0:
+		case 0:			// UP
+			flipX = false;
+			flipY = false;
+			angle = false;
 			break;
-		case 1:
+		case 1:			// UP RIGHT
+			flipX = true;
+			flipY = false;
+			angle = true;
 			break;
-		case 2:
+		case 2:			// DOWN RIGHT
+			flipX = true;
+			flipY = true;
+			angle = true;
 			break;
-		case 3:
+		case 3:			// DOWN
+			flipX = false;
+			flipY = true;
+			angle = false;
 			break;
-		case 4:
+		case 4:			// DOWN LEFT
+			flipX = false;
+			flipY = true;
+			angle = true;
 			break;
-		case 5:
-			break;
-		case 6:
-			break;
-		case 7:
+		case 5:			// UP LEFT
+			flipX = false;
+			flipY = false;
+			angle = true;
 			break;
 	};
 	
-	flipX = false;
-	flipY = false;
-		
+	
+	// Draw unit with sprites and colors based on unit type and coordinate params, and direction
 	switch(type)
 	{
 		case 0:
-			lcd_draw_unit(x, 24, y, 24, ship_m0, ship_m1, SHIP_COLOR_1, SHIP_COLOR_2, SHIP_COLOR_3, LCD_COLOR_BLACK, flipX, flipY);
+		lcd_draw_unit(x, 24, y, 24,ship_m0, ship_m1, SHIP_COLOR_1, SHIP_COLOR_2, SHIP_COLOR_3, LCD_COLOR_BLACK, flipX, flipY);
 		break;
+			
 		case 1:
-			lcd_draw_unit(x, 24, y, 24, butterfly_m0, butterfly_m1, BUTTERFLY_COLOR_1, BUTTERFLY_COLOR_2, BUTTERFLY_COLOR_3, LCD_COLOR_BLACK, flipX, flipY);
+			if(angle)
+				lcd_draw_unit(x, 24, y, 24, butterfly_up_left_m0, butterfly_up_left_m1, BUTTERFLY_COLOR_1, BUTTERFLY_COLOR_2, BUTTERFLY_COLOR_3, LCD_COLOR_BLACK, flipX, flipY);
+			else
+				lcd_draw_unit(x, 24, y, 24, butterfly_m0, butterfly_m1, BUTTERFLY_COLOR_1, BUTTERFLY_COLOR_2, BUTTERFLY_COLOR_3, LCD_COLOR_BLACK, flipX, flipY);
 		break;
+		
 		case 2:
-			lcd_draw_unit(x, 24, y, 24, bee_m0, bee_m1, BEE_COLOR_1, BEE_COLOR_2, BEE_COLOR_3, LCD_COLOR_BLACK, flipX, flipY);
+			if (angle)
+				lcd_draw_unit(x, 24, y, 24, bee_up_left_m0, bee_up_left_m1, BEE_COLOR_1, BEE_COLOR_2, BEE_COLOR_3, LCD_COLOR_BLACK, flipX, flipY);
+			else 
+				lcd_draw_unit(x, 24, y, 24, bee_m0, bee_m1, BEE_COLOR_1, BEE_COLOR_2, BEE_COLOR_3, LCD_COLOR_BLACK, flipX, flipY);
 		break;
+				
 		case 3:
-			lcd_draw_unit(x, 24, y, 24, galaga_m0, galaga_m1, GALAGA_COLOR_1, GALAGA_COLOR_2, GALAGA_COLOR_3, LCD_COLOR_BLACK, flipX, flipY);
+			if(angle)
+				lcd_draw_unit(x, 24, y, 24, galaga_up_left_m0, galaga_up_left_m1, GALAGA_COLOR_1, GALAGA_COLOR_2, GALAGA_COLOR_3, LCD_COLOR_BLACK, flipX, flipY);
+			else	
+				lcd_draw_unit(x, 24, y, 24, galaga_m0, galaga_m1, GALAGA_COLOR_1, GALAGA_COLOR_2, GALAGA_COLOR_3, LCD_COLOR_BLACK, flipX, flipY);
 		break;
 		case 4:
 			lcd_draw_unit(x, 24, y, 24, galaga_m0, galaga_m1, GALAGA_WEAK_COLOR_1, GALAGA_WEAK_COLOR_2, GALAGA_WEAK_COLOR_3, LCD_COLOR_BLACK, flipX, flipY);
@@ -1343,4 +1386,41 @@ void lcd_print_Image(
 
 }
 
+
+/*******************************************************************************
+* Function Name: itoa
+********************************************************************************
+* Summary: int to string function. Takes a uint32 and converts the lower eight
+*							decimel digits to an array of characters to return in the container
+* 						that was handed in
+*
+* Params:	source	source interger to convert to string 
+*					dest*		destination array to store converted values
+*
+*
+* Return:
+*  none
+*******************************************************************************/ 
+void itoa(uint32_t source, char* dest){
+	
+	uint8_t temp;
+	int index = 8;
+	
+	// set final index to null terminator
+	dest[index] = '\0';
+	index --;
+	
+	// for each digit, working from right to left
+	while ( index >= 0){
+		// calculate least significant digit using modulo 10
+		temp = source%10;
+		// determine char value using char arithmetic
+		dest[index] = (char)(temp + '0');
+		
+		// right shift decimal number one digit and decrement index
+		source /= 10;
+		index --;
+	}
+	return;	
+}
 
