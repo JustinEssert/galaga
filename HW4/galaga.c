@@ -80,6 +80,8 @@ uint32_t num_enemies= NUM_UNITS-1;
 
 uint32_t high_scores[5];
 
+uint32_t high_scores[5];
+
 unit_t units[NUM_UNITS];
 bullet_t player_bullets[NUM_PLAYER_BULLETS];
 bullet_t enemy_bullets[NUM_ENEMY_BULLETS];
@@ -533,7 +535,7 @@ void print_main_menu(){
 	char title[] = "--GALAGA--";
 	char start[] = "START GAME";
 	char scores[] = "HIGH SCORE";
-
+  
 	lcd_print_stringXY(title, 2, 5, GALAGA_COLOR_1, LCD_COLOR_BLACK );
 	lcd_print_stringXY(start, 2, 11, GALAGA_COLOR_2, LCD_COLOR_BLACK );
 	lcd_print_stringXY(scores, 2,14, GALAGA_COLOR_2, LCD_COLOR_BLACK );

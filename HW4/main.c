@@ -41,6 +41,7 @@ typedef enum {
 
 bool new_state = true;
 
+
 char group[] = "Group27";
 char individual_1[] = "Justin Essert";
 char individual_2[] = "James Mai";
@@ -53,9 +54,6 @@ static ADC0_Type* myADC = ((ADC0_Type *)PS2_ADC_BASE);
 volatile bool interrupt_timerA = false;
 volatile bool interrupt_timerB = false;
 volatile bool interrupt_adc0ss2 = false;
-
-//uint16_t *adc_val_X;
-//uint16_t *adc_val_Y;
 
 gameState_t state;
 
@@ -228,6 +226,7 @@ int main(void)
   put_string("\n\r");  
   put_string("************************************\n\r");
 	
+
 	// Set state to Main Menu and start the while loop
 	state=MAIN_MENU;
 	new_state = true;
@@ -250,7 +249,6 @@ int main(void)
 		}
 		if(interrupt_timerA){
 			interrupt_timerA = false;
-			
 			counterA = ((counterA+1)%TIMER_A_CYCLES);
 			
 			// Check for Touchscreen press
@@ -307,8 +305,7 @@ int main(void)
 						put_string("error reading port expander");
 						continue;
 					}else if(data & PEXP_BUTTON_DOWN) fire_bullet(true, 0, 0);
-				}
-				
+				}	
 			}
 		}
 
