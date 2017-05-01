@@ -541,12 +541,12 @@ void update_player(bool left) {
 // 
 //*****************************************************************************	
 void print_main_menu(){
-	char title[] = "--GALAGA--";
+	char title[] = "GALAGA";
 	char start[] = "START GAME";
 	char scores[] = "HIGH SCORE";
   
 	// Print title and menu items
-	lcd_print_stringXY(title, 2, 5, GALAGA_COLOR_1, LCD_COLOR_BLACK );
+	lcd_print_stringXY(title, 4, 5, GALAGA_COLOR_1, LCD_COLOR_BLACK );
 	lcd_print_stringXY(start, 2, 11, GALAGA_COLOR_2, LCD_COLOR_BLACK );
 	lcd_print_stringXY(scores, 2,14, GALAGA_COLOR_2, LCD_COLOR_BLACK );
 }
@@ -559,7 +559,7 @@ void print_main_menu(){
 //*****************************************************************************	
 void print_game_over(){
 	static bool state = false;
-	char gameOver[] = "-GAME  OVER-";
+	char gameOver[] = "GAME  OVER";
 	char score[] = "SCORE:";
 	char msg[] = "TAP TO CONT";
 	char score_value[9];
@@ -567,17 +567,8 @@ void print_game_over(){
 	// convert player's score to a string that can be printeds
 	itoa(player_score, score_value);
 	
-	// Print game over text in COLOR_1 or BLACK based on state
-	// state alternates to create flashing text
-	if (state){
-			lcd_print_stringXY(gameOver, 1, 5, GALAGA_COLOR_1, LCD_COLOR_BLACK );
-			state = false;
-	} else {
-			lcd_print_stringXY(gameOver, 1, 5, LCD_COLOR_BLACK, LCD_COLOR_BLACK );
-			state = true;
-	}
-	
-	// Print score and user prompt
+	// Print score and user prompt	
+	lcd_print_stringXY(gameOver, 2, 5, GALAGA_COLOR_1, LCD_COLOR_BLACK );
 	lcd_print_stringXY(score, 0, 11, GALAGA_COLOR_2, LCD_COLOR_BLACK );
 	lcd_print_stringXY(score_value, 6, 11, GALAGA_COLOR_2, LCD_COLOR_BLACK );
 	lcd_print_stringXY(msg, 1,16, GALAGA_COLOR_2, LCD_COLOR_BLACK );
@@ -778,12 +769,12 @@ void print_new_record(){
 // 
 //*****************************************************************************
 void print_pause(){
-	char title[] = "--PAUSED--";
+	char title[] = "PAUSED";
 	char start[] = "MAIN MENU";
 	char scores[] = "RESUME";
   
 	// Print title and menu items
-	lcd_print_stringXY(title, 2, 5, GALAGA_COLOR_1, LCD_COLOR_BLACK );
+	lcd_print_stringXY(title, 4, 5, GALAGA_COLOR_1, LCD_COLOR_BLACK );
 	lcd_print_stringXY(start, 2, 11, GALAGA_COLOR_2, LCD_COLOR_BLACK );
 	lcd_print_stringXY(scores, 3,14, GALAGA_COLOR_2, LCD_COLOR_BLACK );
 }
