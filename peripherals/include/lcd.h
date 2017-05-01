@@ -236,9 +236,27 @@ void lcd_draw_image(
 );
 	
 /*******************************************************************************
-* Function Name: lcd_draw_image
+* Function Name: lcd_draw_unit
 ********************************************************************************
-* Summary: Prints a character starting at x_start and y_start
+* Summary: Prints a color unit starting at x_start and y_start
+*					 First two colors are exclusive bits in each bitmap
+*					 Third color is intersect of two bitmaps
+* 				 IMAGE IS ASSUMED TO BE 24px by 24px AS ALL UNITS ARE OF THIS SIZE
+*
+* Params:	 x_start							top left corner of image
+*					 image_width_bits			size of image
+*          y_start							top right corner of image
+*          image_height_pixels	size of image
+*          *image0							address to first bitmap  
+*					 *image1							address to second bitmap 
+*					 f1Color							forground color 1 of image
+*					 f2Color							forground color 2 of image
+*					 f3Color							forground color 3 of image
+*					 bColor								background color of image	
+*					 flipX								whether to parse x coordinates in reverse
+*					 flipY								whether to parse y coordinates in reverse
+*
+*
 * Returns:
 *  Nothing
 *******************************************************************************/

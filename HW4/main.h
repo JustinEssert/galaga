@@ -61,6 +61,9 @@
 #define LCD_HEIGHT					360;
 #define LCD_TOTAL_PIX				LCD_WIDTH*LCD_HEIGHT;
 
+#define LCD_LN_HEIGHT				16;
+#define LCD_TOUCH_BUFFER		8;
+
 
 // DEFINE EEPROM VARS
 #define ADDR_START    256

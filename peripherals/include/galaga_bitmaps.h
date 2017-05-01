@@ -54,24 +54,67 @@ void lcd_print_stringXY(
     uint16_t bg_color
 );
 
+
+		
+/*******************************************************************************
+* Function Name: lcd_clear_Image
+********************************************************************************
+* Summary: clears a block of lcd that is the same size as one of the game sprites
+*          
+* Return:
+*  Nothing
+*******************************************************************************/ 
+void lcd_clear_Image(
+	  int16_t x,
+		int16_t y
+);
+
+/*******************************************************************************
+* Function Name: lcd_draw_explosion
+********************************************************************************
+* Summary: draws explotion at the given coordinates
+*          
+* Return:
+*  Nothing
+*******************************************************************************/ 
+void lcd_draw_explosion(
+	  int16_t x,
+		int16_t y
+);
+
+
+/*******************************************************************************
+* Function Name: lcd_print_Image
+********************************************************************************
+* Summary: draws sprite at given location. Sprite can be flipped over either
+*					 axis and angled sprites are supported for units that have them.
+*
+* Params:		x			x coordinate of image corner
+*						y			y coordinate of image corner
+*						type	the unit type. determines sprite that will be drawn
+*						dir		direction unit is facing. determins whether x and y will be
+*										flipped, and whether the angled sprite will be used
+*
+*
+* Return:
+*  Nothing
+*******************************************************************************/
 void lcd_print_Image(
     int16_t x,
 		int16_t y,
 		short type,
 		short dir
 );
-		
-void lcd_clear_Image(
-	  int16_t x,
-		int16_t y
-);
 
-
-void lcd_draw_explosion(
-	  int16_t x,
-		int16_t y
-);
-
+/*******************************************************************************
+* Function Name: itoa
+********************************************************************************
+* Summary: int to string function. Takes a uint32 and converts the lower eight
+*							decimel digits to an array of characters
+*          
+* Return:
+*  char[9]	first 8 indexes are string, last index is null terminator
+*******************************************************************************/ 
 void itoa(
 	uint32_t source,
 	char* dest_ADDRESS_OF_SIZE_NINE_CHAR_ARRAY_PLEASE_AND_THANK_YOU

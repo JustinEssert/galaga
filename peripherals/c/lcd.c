@@ -215,8 +215,25 @@ void lcd_draw_image(
 /*******************************************************************************
 * Function Name: lcd_draw_unit
 ********************************************************************************
-* Summary: Prints a unit starting at x_start and y_start
+* Summary: Prints a color unit starting at x_start and y_start
+*					 First two colors are exclusive bits in each bitmap
+*					 Third color is intersect of two bitmaps
 * 				 IMAGE IS ASSUMED TO BE 24px by 24px AS ALL UNITS ARE OF THIS SIZE
+*
+* Params:	 x_start							top left corner of image
+*					 image_width_bits			size of image
+*          y_start							top right corner of image
+*          image_height_pixels	size of image
+*          *image0							address to first bitmap  
+*					 *image1							address to second bitmap 
+*					 f1Color							forground color 1 of image
+*					 f2Color							forground color 2 of image
+*					 f3Color							forground color 3 of image
+*					 bColor								background color of image	
+*					 flipX								whether to parse x coordinates in reverse
+*					 flipY								whether to parse y coordinates in reverse
+*
+*
 * Returns:
 *  Nothing
 *******************************************************************************/
@@ -247,6 +264,8 @@ void lcd_draw_unit(
   uint16_t y0;
   uint16_t y1;
  
+	
+	// SET LCD ACTIVE REGION
   x0 = x_start;
   x1 = x_start + image_width_bits-1;
   
@@ -255,35 +274,46 @@ void lcd_draw_unit(
   
   lcd_set_pos(x0, x1, y0, y1);
   
+	// Calculate bytes per row of image
   bytes_per_row = image_width_bits / 8;
   if( (image_width_bits % 8) != 0)
   {
     bytes_per_row++;
   }
+	
+	// Calculate total number of bytes in image
 	bytes_per_image = bytes_per_row * image_height_pixels;
   
+	
+	// for each row in the image
   for (i=0;i< image_height_pixels ;i++)
   {
 				// Draw each byte of a row
         for(j= 0; j < bytes_per_row; j++)
         {
+						// if y is fliped, offset is inverted
 						if (flipY)
 							row_offset = bytes_per_image - ((i+1)*bytes_per_row);
+						// else offset is calculated as number of rows time bytes per row
 						else
 							row_offset = (i*bytes_per_row);
 						
+						// if x is fliped, column position is inverted
 						if (flipX)
 							column = (bytes_per_row-1) - j;
+						// else column number is just j
 						else
 							column = j;
 						
+						// Calculate final byte index based on calculated values above
 						byte_index = row_offset + column;
 						
-						
+						// Grab data from image files using calculated index
 						data0 = image0[byte_index];
 						data1 = image1[byte_index];
 						// Draw one byte
 						for (k = 0; k < 8; k++){
+							// if flipX is set, parse data most to least significant bit
 							if(!flipX){
 								if ( data1 & (~data0) & 0x80) 			lcd_write_data_u16(f1Color);
 								else if ( (~data1) & data0 & 0x80) 	lcd_write_data_u16(f2Color);
@@ -291,6 +321,7 @@ void lcd_draw_unit(
 								else 															lcd_write_data_u16(bColor);
 								data0  = data0 << 1;
 								data1  = data1 << 1;
+							// else parse data normally from least to most significant bit
 							} else {
 								if ( data1 & (~data0) & 0x01) 			lcd_write_data_u16(f1Color);
 								else if ( (~data1) & data0 & 0x01) 	lcd_write_data_u16(f2Color);
