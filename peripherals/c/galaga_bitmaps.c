@@ -1212,7 +1212,7 @@ const uint8_t shrapnel[] =
 **********************************************************/
 
 // must hand in size 9 char array
-void itoa(uint16_t source, char* dest_ADDRESS_OF_SIZE_NINE_CHAR_ARRAY_PLEASE_AND_THANK_YOU){
+void itoa(uint32_t source, char* dest_ADDRESS_OF_SIZE_NINE_CHAR_ARRAY_PLEASE_AND_THANK_YOU){
 	char* a = dest_ADDRESS_OF_SIZE_NINE_CHAR_ARRAY_PLEASE_AND_THANK_YOU;
 	uint8_t temp;
 	int index = 8;
@@ -1244,6 +1244,7 @@ void lcd_print_stringXY(
 	//Enter loop to parse through each character of the message
 	while(*msg != 0){
 		//Find the index of the character for this iteration of the loop
+
 		int index;
 		int key = ((int)*msg);
 		if(key==32) index= (key - 32) * 48;
@@ -1272,7 +1273,7 @@ void lcd_print_stringXY(
 		else X++;
 	}
 
-
+	put_string('\n');
 
 }
 void lcd_clear_Image(

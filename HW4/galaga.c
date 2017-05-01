@@ -80,6 +80,7 @@ uint32_t num_enemies= NUM_UNITS-1;
 
 uint32_t high_scores[5];
 
+uint32_t hs_initials[5];
 uint32_t high_scores[5];
 
 unit_t units[NUM_UNITS];
@@ -580,67 +581,89 @@ void print_high_scores(){
 	pull_high_scores();
 	
 	for (i = 0; i < NUM_HIGH_SCORES; i++){
-		initials = (char*) &high_scores[i];
-		itoa( (high_scores[i]&0xFFFF) ,score_value);
+		//put_string(hs_initials[i]);
+		
+		initials = (char*)(hs_initials+i);
+		itoa( high_scores[i] ,score_value);
 		lcd_print_stringXY(initials, 1,(7+i), GALAGA_COLOR_3, LCD_COLOR_BLACK );
 		lcd_print_stringXY(score_value, 5,(7+i), GALAGA_COLOR_3, LCD_COLOR_BLACK );
 }
-	
+		itoa( player_score ,score_value);
+		lcd_print_stringXY(score_value, 5,(7+6), GALAGA_COLOR_3, LCD_COLOR_BLACK );
+
 	
 }
 void pull_high_scores(){
 	uint8_t read_val;
 	uint16_t addr;
-	int i;
+	char* initials;
+	int i,j;
 	
 	addr = ADDR_START;
 	for( i = 0; i < NUM_HIGH_SCORES; i++){
+		
 		high_scores[i] = 0;
-		eeprom_byte_read(I2C1_BASE,addr, &read_val);
-		high_scores[i] |= read_val;
-		addr++;
-			
-		eeprom_byte_read(I2C1_BASE,addr, &read_val);
-		high_scores[i] |= read_val << 4;
-		addr++;
-			
-		eeprom_byte_read(I2C1_BASE,addr, &read_val);
-		high_scores[i] |= (read_val & 0xFC ) << 12; // sets last char to null
-		addr++;	
+		
+		for( j = 0; j < 4; j++){	
+			eeprom_byte_read(I2C1_BASE,addr, &read_val);
+			high_scores[i] |= read_val << (j*8);
+			addr++;
+		}
+		
+		
+		hs_initials[i] = 0;
+		initials = (char*)&hs_initials[i];
+		for( j = 0; j < 3; j++){
+			eeprom_byte_read(I2C1_BASE,addr, &read_val);
+			initials[j] = (char)read_val;
+			addr++;
+		}
 	}
 	
 }
+
+void high_scores_test(){
+	char kek[4]= "kek";
+	pull_high_scores();
+	player_score = 12543678;
+	push_high_scores(kek);
+	player_score = 23654789;
+	push_high_scores(kek);
+}
+
 bool push_high_scores(char* initials){
-	int low_score = 0xFFFF; //value of lowest high score
+	uint32_t low_score = 0xFFFFFFFF; //value of lowest high score
 	int low_index = 0; //index of lowest high score
 	uint8_t write_val;
 	uint16_t addr;
-	int i;
+	int i,j;
 	
 	pull_high_scores();
 	
 	for(i = 0; i < NUM_HIGH_SCORES; i++){
-		if( (high_scores[i] & 0xFFFF) < low_score){
+		if( high_scores[i] < low_score){
 			low_index = i;
-			low_score = high_scores[i] & 0xFFFF;
+			low_score = high_scores[i];
 		}
 	}
 	printf("low index: %d; low score:\n\r",low_score);
 
 	if ( player_score > low_score ){
 		addr = ADDR_START;
-		addr += 3*low_index;
-		write_val = player_score & 0xFF;
-		eeprom_byte_write(I2C1_BASE,addr, write_val);
-		addr++;
+		addr += 7*low_index;
 		
-		write_val = (player_score >> 4) & 0xFF;
-		eeprom_byte_write(I2C1_BASE,addr, write_val);
-		addr++;
 		
-		write_val = (uint8_t) *initials;
-		write_val &= 0xFC;	 // sets last char to null term regardless of current value
-		eeprom_byte_write(I2C1_BASE,addr, write_val);
+		for(i = 0; i < 4; i++){
+			write_val = ( player_score >> (8*i) ) & 0xFF;
+			eeprom_byte_write(I2C1_BASE,addr, write_val);
+			addr++;
+		}
+		*initials = 'k';
+		for(i = 0; i < 3; i++){
+			write_val = (uint8_t) initials[i];
+			eeprom_byte_write(I2C1_BASE,addr, (int)'Z');
+			addr++;
+		}
 		printf("return true");
 		return true;
 		
@@ -651,9 +674,10 @@ bool push_high_scores(char* initials){
 	
 }
 
-
-void high_scores_test(){
-	pull_high_scores();
-	player_score = 99999999;
-	push_high_scores("kek");
+void print_new_record(){
+	
 }
+
+
+
+

@@ -58,6 +58,9 @@
 
 #define NUM_HIGH_SCORES							5
 
+extern uint32_t player_score;
+extern uint32_t high_scores[5];
+
 
 #define DELAY_SMALL									-5
 #define DELAY_LARGE									-40
@@ -96,6 +99,7 @@ void print_game_over();
 void pull_high_scores();
 bool push_high_scores(char* initials);
 void print_high_scores();
+void print_new_record();
 
 void high_scores_test();
 
