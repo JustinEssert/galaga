@@ -76,7 +76,7 @@ typedef struct bullet{
 short player_lives = PLAYER_START_LIVES;
 
 uint32_t high_score = 0, player_score=0;
-uint32_t num_enemies= NUM_UNITS-1;
+uint32_t level;
 
 uint32_t high_scores[5];
 
@@ -199,30 +199,57 @@ void initialize_units(){
 //	Summary: prints a new frame to the LCD
 //
 //*****************************************************************************
-void update_LCD () {
-	uint32_t x, i;	
-	char banner[] = "1UP    HIGH";
-	char one_up[] = "1UP";
-	
-//	lcd_clear_screen(LCD_COLOR_BLACK);
-	
+bool update_LCD () {
+	uint32_t x, i;
+	bool toggle = false;
+	static short count = 0;
+	char banner1[] = "HIGH         ";
+	char banner2[] = "1UP          ";
+	char lost_life[] = " TRY AGAIN ";
+
+	itoa(high_score, (banner1 + 5));
+	itoa(player_score, (banner2 + 5));
 	// Display Boundries
 	for(x=0; x < 240; x++){		
 			lcd_draw_px(x, 29, LCD_COLOR_WHITE);
 	}
-	for(x=0; x < 240; x++){		
+	for(x=0; x < 240; x++){	
 		lcd_draw_px(x, 284, LCD_COLOR_WHITE);
 	}
 	
-	//Print Extra Lives
-	for(i=0; i<player_lives-1;i++){
-		lcd_print_Image(210 - i*30, 0, 0, DIR_U);
-	}
-	
 	//Print Score Info
-	lcd_print_stringXY(banner, 1, 0, LCD_COLOR_RED, LCD_COLOR_BLACK );
+	lcd_print_stringXY(banner1, 0, 0, LCD_COLOR_RED, LCD_COLOR_BLACK );
+	lcd_print_stringXY(banner2, 0, 1, LCD_COLOR_RED, LCD_COLOR_BLACK );
 	
-	lcd_print_Image(units[0].pos.x, units[0].pos.y, units[0].type, units[0].dir);
+	if(units[0].active){
+		lcd_print_Image(units[0].pos.x, units[0].pos.y, units[0].type, units[0].dir);
+		//Print Extra Lives
+		for(i=0; i<player_lives-1;i++){
+			lcd_clear_Image(210 - i*30, 0);
+			lcd_print_Image(210 - i*30, 0, 0, DIR_U);
+		}
+	}
+	else{
+		if(count == 0){
+			player_lives -=1;		
+			if(player_lives<=0) return false;
+		}
+		if(count<10){
+			lcd_clear_Image(units[0].pos.x, units[0].pos.y);
+			lcd_print_stringXY(lost_life, 0, 10, LCD_COLOR_RED, LCD_COLOR_BLACK );
+			count++;
+		}else {
+			lcd_clear_screen(LCD_COLOR_BLACK);
+			count = 0;
+			units[0].pos.x = units[0].home_pos.x;
+			units[0].pos.y = units[0].home_pos.y;
+			units[0].move_state = INIT_FORMATION;
+			units[0].health ++;
+			units[0].active = true;
+			lcd_print_Image(units[0].pos.x, units[0].pos.y, units[0].type, units[0].dir);
+		}
+	}
+	return true;
 }
 
 
@@ -241,11 +268,35 @@ void game_init() {
 	lcd_clear_screen(LCD_COLOR_BLACK);
 	initialize_units();
 	update_LCD();
+	player_lives = PLAYER_START_LIVES;
+	level = 1;
+	player_score = 0;
+	
+	// Make sure high scores is up to date
+	pull_high_scores();
+	
+	// Get the highest scores
+	high_score = high_scores[0];
+	for(i=1; i<NUM_HIGH_SCORES; i++) {
+		if(high_score < high_scores[i]) high_score = high_scores[i];
+	}
 	
 	// Initialize all bullets to inactive
 	for(i=0;i<NUM_PLAYER_BULLETS;i++) player_bullets[i].active = false;
 	for(i=0;i<NUM_ENEMY_BULLETS;i++)	enemy_bullets[i].active = false;
 
+}
+
+void level_up(){
+	short i;
+	lcd_clear_screen(LCD_COLOR_BLACK);
+	initialize_units();
+	update_LCD();
+	level++;
+	
+	// Initialize all bullets to inactive
+	for(i=0;i<NUM_PLAYER_BULLETS;i++) player_bullets[i].active = false;
+	for(i=0;i<NUM_ENEMY_BULLETS;i++)	enemy_bullets[i].active = false;
 }
 
 
@@ -302,28 +353,34 @@ bool move_to_destination(int unit_num, uint16_t x, uint16_t y){
 //			player_bullet:			true if the player fires the bullet
 //													false if an enemie fired the bullet
 //			
-// 			x										starting x coordinate of bullet
+// 			rand_num:						random 32 bit in used for shooting.
 //
-//			y										starting y coordinate of bullet
 //*****************************************************************************
-void fire_bullet (bool player_bullet, uint16_t x, uint16_t y) {
-	short i;
-	if(player_bullet){
-		for(i=0;i<NUM_PLAYER_BULLETS;i++){
-			if(!player_bullets[i].active){
-				player_bullets[i].pos.x = units[0].pos.x + UNIT_SIZE/2;
-				player_bullets[i].pos.y = units[0].pos.y + UNIT_SIZE;
-				player_bullets[i].active = true;
-				i=NUM_PLAYER_BULLETS;
+void fire_bullet (bool player_bullet, uint32_t rand_num) {
+	short i, j, fire, freq;
+	
+	if((units[0].active)){
+		if(player_bullet){
+			for(i=0;i<NUM_PLAYER_BULLETS;i++){
+				if(!player_bullets[i].active){
+					player_bullets[i].pos.x = units[0].pos.x + UNIT_SIZE/2;
+					player_bullets[i].pos.y = units[0].pos.y + UNIT_SIZE;
+					player_bullets[i].active = true;
+					i=NUM_PLAYER_BULLETS;
+				}
 			}
-		}
-	} else{
-		for(i=0;i<NUM_ENEMY_BULLETS;i++){
-			if(!enemy_bullets[i].active){
-				enemy_bullets[i].pos.x = x;
-				enemy_bullets[i].pos.y = y;
-				enemy_bullets[i].active = true;
-				i=NUM_ENEMY_BULLETS;
+		} else{
+			fire = (int)(((rand_num)%100)/(95 - level*5));
+			j = rand_num %(NUM_UNITS-1) + 1;
+			if(fire && units[j].active){
+				for(i=0;i<NUM_ENEMY_BULLETS;i++){
+					if(!enemy_bullets[i].active){
+						enemy_bullets[i].pos.x = units[j].pos.x + UNIT_SIZE/2;
+						enemy_bullets[i].pos.y = units[j].pos.y;
+						enemy_bullets[i].active = true;
+						i=NUM_ENEMY_BULLETS;
+					}
+				}
 			}
 		}
 	}
@@ -338,8 +395,9 @@ void fire_bullet (bool player_bullet, uint16_t x, uint16_t y) {
 //*****************************************************************************
 bool update_enemies() {
 	uint8_t i;
-	uint16_t x_old, y_old;
-	long dX, dY;
+	uint16_t x_old, y_old, num_enemies = 0;
+	char test[10];
+  long dX, dY;
 
 	for(i=1; i<NUM_UNITS; i++) {
 		x_old = units[i].pos.x;
@@ -425,21 +483,57 @@ bool update_enemies() {
 			
 		
 		
-		if(units[i].active && units[i].move_state!=EXPLOSION){
-			lcd_print_Image(units[i].pos.x, units[i].pos.y, units[i].type, units[i].dir);
-		} else if(units[i].active && units[i].move_state==EXPLOSION) {
+		if(units[i].active && units[i].move_state!=EXPLOSION)
+		{
+			if(units[i].type!=GALAGA || units[i].health!=1)
+				lcd_print_Image(units[i].pos.x, units[i].pos.y, units[i].type, units[i].dir);
+			else 
+				lcd_print_Image(units[i].pos.x, units[i].pos.y, (short)(units[i].type)+1, units[i].dir);
+		} 
+		else if(units[i].active && units[i].move_state==EXPLOSION) {
 			if(units[i].formation_index>=0){
 				lcd_draw_explosion(units[i].pos.x, units[i].pos.y);
 				units[i].formation_index--;
 			} else {
 				units[i].active = false;
-				num_enemies--;
 			}
 		}
+		if(units[i].active) num_enemies++;
 	}
 	if(num_enemies <= 0) return true;
 	return false;
 }
+
+//*****************************************************************************
+// Function Name: update_player_score
+//*****************************************************************************
+//	Summary: Updates the players score after a hit
+// 
+//  Parameters:
+//
+//			defeated_player_index:		array index of the player that was defeated
+//
+//*****************************************************************************
+void update_player_score
+(
+    short defeated_player_index
+)
+{
+	uint16_t points;
+	unitType_t type = units[defeated_player_index].type;
+	
+	// Check the type of character
+	if(type==BUTTERFLY) 		points = 160;
+	else if(type==BEE)  		points = 50;
+	else if (type==GALAGA)	points = 400;
+	
+	// If still in initial configuration, 2x points
+	if(units[defeated_player_index].move_state == INIT_FORMATION) points *= 2;
+	
+	// update player_score
+	player_score += points;
+}
+
 
 //*****************************************************************************
 // Function Name: update_bullets
@@ -448,7 +542,7 @@ bool update_enemies() {
 // 
 //*****************************************************************************
 void update_bullets(){
-	short i,j,dX, dY;
+	short i,j,dX, dY, track_index;
 	for(i=0;i<NUM_PLAYER_BULLETS;i++){
 		if(player_bullets[i].active){
 			//Reset the previous position to the background color
@@ -472,16 +566,20 @@ void update_bullets(){
 						
 						// If within the hitbox of unit J
 						if((dX>HITBOX_BUFFER-BULLET_WIDTH) && (dY>HITBOX_BUFFER) && (dX<UNIT_SIZE - HITBOX_BUFFER) && (dY<UNIT_SIZE - HITBOX_BUFFER)){
-							// Change to an explosion and set formation_index to leave the explosion for 2 cycles
-							units[j].move_state = EXPLOSION;
-							units[j].formation_index = 2;
-							// Draw the explosion
-							lcd_draw_explosion(units[j].pos.x,units[j].pos.y);
-							
 							//Set the bullet to inactive
 							player_bullets[i].active = false;
-						} else{
 							
+							units[j].health--;
+							if(units[j].health == 0){
+								// Change to an explosion and set formation_index to leave the explosion for 2 cycles
+								units[j].move_state = EXPLOSION;
+								units[j].formation_index = 2;
+								// Draw the explosion
+								lcd_draw_explosion(units[j].pos.x,units[j].pos.y);
+								
+								// Update Player's score
+								update_player_score(j);
+							}
 						}
 					}
 				}
@@ -496,20 +594,36 @@ void update_bullets(){
 			
 			lcd_draw_bullet(enemy_bullets[i].pos.x, BULLET_WIDTH, enemy_bullets[i].pos.y, BULLET_HEIGHT,LCD_COLOR_BLACK);
 			
-			dX = enemy_bullets[i].pos.x - units[0].pos.x;
-			dY = enemy_bullets[i].pos.y - units[0].pos.y;
 			
 			enemy_bullets[i].pos.y -= BULLET_SPEED;
 			
-			if(dX>0) enemy_bullets[i].pos.x += TRACKING_SPEED;
-			else if(dX<0) enemy_bullets[i].pos.x -= TRACKING_SPEED;
+			dX = enemy_bullets[i].pos.x-UNIT_SIZE/2 - units[0].pos.x;
+			dY = enemy_bullets[i].pos.y-UNIT_SIZE/2 - units[0].pos.y;
+			
+			
+			if(level>1){
+				track_index++;
+				if(track_index<=5-level){
+					if(dX>0) enemy_bullets[i].pos.x 			-= TRACKING_SPEED;
+					else if(dX<0) enemy_bullets[i].pos.x 	+= TRACKING_SPEED;
+					track_index = 0;
+				}
+			}
+			
+			dX = enemy_bullets[i].pos.x-UNIT_SIZE/2 - units[0].pos.x;
+			dY = enemy_bullets[i].pos.y-UNIT_SIZE/2 - units[0].pos.y;
 			
 			if(enemy_bullets[i].pos.y<BOUNDRY_Y_BOTTOM){
 				enemy_bullets[i].active = false;
 			} else if((dX>=HITBOX_BUFFER) && (dY>=HITBOX_BUFFER) && (dX<=UNIT_SIZE - HITBOX_BUFFER) && (dY<=UNIT_SIZE - HITBOX_BUFFER)){
-				units[0].move_state = EXPLOSION;
-				lcd_draw_explosion(units[0].pos.x,units[0].pos.y);
+				units[0].health--;
+				if(units[0].health == 0){
+					lcd_clear_Image(units[0].pos.x, units[0].pos.y);
+					units[0].move_state = EXPLOSION;
+					units[0].active = false;
+				}
 				enemy_bullets[i].active = false;
+				
 			} else{
 				lcd_draw_bullet(enemy_bullets[i].pos.x, BULLET_WIDTH, enemy_bullets[i].pos.y, BULLET_HEIGHT,ENEMY_BULLET_COLOR);
 			}
@@ -524,12 +638,14 @@ void update_bullets(){
 // 
 //*****************************************************************************
 void update_player(bool left) {
-	lcd_clear_Image(units[0].pos.x, units[0].pos.y);
-	
-	if(left && units[0].pos.x<=210) 			units[0].pos.x += 5;
-	else if(!left &&units[0].pos.x>=5)		units[0].pos.x -= 5;
-	
-	lcd_print_Image(units[0].pos.x, units[0].pos.y, units[0].type, units[0].dir);
+
+	if((units[0].active)){
+		lcd_clear_Image(units[0].pos.x, units[0].pos.y);
+		if(left && units[0].pos.x<=210) 			units[0].pos.x += 5;
+		else if(!left &&units[0].pos.x>=5)		units[0].pos.x -= 5;
+		
+		lcd_print_Image(units[0].pos.x, units[0].pos.y, units[0].type, units[0].dir);
+	}
 }
 
 
@@ -567,6 +683,7 @@ void print_game_over(){
 	// convert player's score to a string that can be printeds
 	itoa(player_score, score_value);
 	
+
 	// Print score and user prompt	
 	lcd_print_stringXY(gameOver, 2, 5, GALAGA_COLOR_1, LCD_COLOR_BLACK );
 	lcd_print_stringXY(score, 0, 11, GALAGA_COLOR_2, LCD_COLOR_BLACK );
@@ -603,7 +720,6 @@ void print_high_scores(){
 	
 	// For each score
 	for (i = 0; i < NUM_HIGH_SCORES; i++){
-		//put_string(hs_initials[i]);
 		
 		// cast initials back to char array
 		initials = (char*)(hs_initials+i);

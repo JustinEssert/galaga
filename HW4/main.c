@@ -313,6 +313,8 @@ int main(void)
 	char initial[4];
 	bool foo = false;
 	
+	extern uint16_t level;
+
 	
 	// INITIALIZE FUNCTIONS =====================================================
 	initialize_hardware();
@@ -439,17 +441,22 @@ int main(void)
 					myADC->PSSI = ADC_PSSI_SS2;
 					//update_enemies();
 					if(update_enemies()) {
-						state = MAIN_MENU;
+						level_up();
+					}
+					if(!update_LCD()){
+						state = GAME_OVER;
 						new_state = true;
 					}
-					update_LCD();
 				}
 				// If new interrupt count read PEXP buttons
 				if(counterA==0){
 					if(pexp_read_buttons(I2C1_BASE, &data) != I2C_OK){
 						put_string("error reading port expander");
 						continue;
-					}else if(data & PEXP_BUTTON_DOWN) fire_bullet(true, 0, 0);
+					}else if(data & PEXP_BUTTON_DOWN) fire_bullet(true, 0);
+					for(i=0; i<17; i++){
+						fire_bullet(false, get_rand_num(TIMER0_BASE));
+					}
 				}	
 			}
 	}
@@ -463,7 +470,7 @@ int main(void)
 			
 			// Increment the counter & reset to zero if it reached TIMER_B_CYCLES
 			counterB = ((counterB+1)%TIMER_B_CYCLES);
-				
+
 			if(state == MAIN_GAME){
 				if(counterB==0) {
 					update_LCD();

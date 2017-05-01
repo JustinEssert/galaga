@@ -269,3 +269,14 @@ bool gp_timer_config_16_periodic(uint32_t base_addr, uint8_t prescaleA, uint16_t
 		
   return true;  
 }
+
+uint32_t get_rand_num(uint32_t base_addr){
+	uint32_t val;
+	TIMER0_Type *gp_timer;
+	gp_timer = (TIMER0_Type *)base_addr;
+	
+	
+	val = gp_timer->TAV%320;
+	val |= base_addr;
+	return val;
+}
