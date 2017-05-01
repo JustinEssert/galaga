@@ -89,8 +89,8 @@ void update_player(bool left);
 // 
 //*****************************************************************************
 void update_bullets();
-//void update_LCD();
-
+bool update_LCD();
+void level_up();
 
 
 void print_main_menu();

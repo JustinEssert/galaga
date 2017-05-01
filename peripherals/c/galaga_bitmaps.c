@@ -1273,8 +1273,6 @@ void lcd_print_stringXY(
 		else X++;
 	}
 
-	put_string('\n');
-
 }
 void lcd_clear_Image(
 	  int16_t x,
@@ -1337,6 +1335,9 @@ void lcd_print_Image(
 		break;
 		case 3:
 			lcd_draw_unit(x, 24, y, 24, galaga_m0, galaga_m1, GALAGA_COLOR_1, GALAGA_COLOR_2, GALAGA_COLOR_3, LCD_COLOR_BLACK, flipX, flipY);
+		break;
+		case 4:
+			lcd_draw_unit(x, 24, y, 24, galaga_m0, galaga_m1, GALAGA_WEAK_COLOR_1, GALAGA_WEAK_COLOR_2, GALAGA_WEAK_COLOR_3, LCD_COLOR_BLACK, flipX, flipY);
 		break;
 	};
 

@@ -51,5 +51,17 @@ bool gp_timer_config_16_periodic(uint32_t base_addr, uint8_t prescaleA, uint16_t
 //*****************************************************************************
 bool gp_timer_wait(uint32_t base_addr, uint32_t ticks);
 
-
+//*****************************************************************************
+// Gets a random number by magic
+//
+// Parameters:
+//			base_addr				base address of a timer
+//
+// Returns:
+// 			val							a random uint32_t
+//*****************************************************************************
+uint32_t get_rand_num
+(
+	uint32_t base_addr
+);
 #endif

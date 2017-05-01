@@ -13,16 +13,20 @@
 #define				SHIP_COLOR_2				0x001F // Blue
 #define				SHIP_COLOR_3				0xFFFF // White
 
-#define				GALAGA_COLOR_1			0xF800 // Red
+#define				GALAGA_COLOR_1			0xF88A // Red-Pink
 #define				GALAGA_COLOR_2			0xFFE0 // Yellow
-#define				GALAGA_COLOR_3			0x068C // Green-Blue
+#define				GALAGA_COLOR_3			0x35EB // Green-Blue
+
+#define				GALAGA_WEAK_COLOR_1	0xFAAA // Pink
+#define				GALAGA_WEAK_COLOR_2	0xFFFF // White
+#define				GALAGA_WEAK_COLOR_3	0x79DF // Purple
 
 #define				BEE_COLOR_1					0xFFE0 // Yellow
-#define				BEE_COLOR_2					0x001F // Blue
+#define				BEE_COLOR_2					0x501F // Blue
 #define				BEE_COLOR_3					0xF800 // Red
 
-#define				BUTTERFLY_COLOR_1		0xF800 // Red
-#define				BUTTERFLY_COLOR_2		0x001F // Blue
+#define				BUTTERFLY_COLOR_1		0x001F // Blue
+#define				BUTTERFLY_COLOR_2		0xF800 // Red
 #define				BUTTERFLY_COLOR_3		0xFFFF // White
 
 #define				UNIT_WIDTH					24
