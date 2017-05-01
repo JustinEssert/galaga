@@ -25,6 +25,7 @@
 #include "ps2.h"
 #include "launchpad_io.h"
 #include "lcd.h"
+#include "port_expander.h"
 #include "i2c.h"
 #include "eeprom.h"
 #include "galaga.h"
@@ -39,6 +40,9 @@ typedef enum {
 	NEW_RECORD
 } gameState_t;
 
+bool new_state = true;
+
+
 char group[] = "Group27";
 char individual_1[] = "Justin Essert";
 char individual_2[] = "James Mai";
@@ -52,8 +56,7 @@ volatile bool interrupt_timerA = false;
 volatile bool interrupt_timerB = false;
 volatile bool interrupt_adc0ss2 = false;
 
-uint16_t *adc_val_X;
-uint16_t *adc_val_Y;
+gameState_t state;
 
 // Game Variables
 uint8_t placeholder_image[20] = {
@@ -92,6 +95,7 @@ void initialize_hardware(void)
 	
 	// INITIALIZE LEDS AND SWITCH BUTTONS =======================================
 	lp_io_init();
+	port_expander_init();
 	
 	
 	// INITIALIZE TIMER =========================================================
@@ -112,76 +116,6 @@ void initialize_hardware(void)
 	port_expander_init();
 	
 }
-
-
-
-
-//*****************************************************************************
-// Function Name: ship_move
-//*****************************************************************************
-//	Summary: Either draws or erases active active pixel
-// 
-//	Parameters:
-//
-//	draw: 				Pass in true to draw or false to erase
-//
-//*****************************************************************************
-void ship_move (uint32_t x_value, uint32_t y_value)
-{
-	static int xPos = 120;					// x coordinate of cursor
-	static int yPos = 160;					// y coordinate of cursor
-	uint32_t move = 0;
-	
-	// CHECK IF THE PS2 IS PAST ANY OF OUR THRESHOLDS ===========================
-	// Check if the x value is >= 75% or <= 25%
-	if(x_value >= 0xBFD)				move |= X_GREATER_THAN_3_4;
-	else if(x_value<= 0x3FF)		move |= X_LESS_THAN_1_4;
-	
-	// Check if the y value is >= 75% or <= 25%
-	if(y_value >= 0xBFD)				move |= Y_GREATER_THAN_3_4;
-	else if(y_value <= 0x3FF)		move |= Y_LESS_THAN_1_4;
-	
-	// CHECK THE MODE ===========================================================
-	// Clear pixel current position
-	lcd_draw_image(
-		xPos-6, 13, yPos-4, 9, placeholder_image, 
-		LCD_COLOR_BLACK, LCD_COLOR_BLACK
-  );
-	
-			
-		
-		// UPDATE THE X AND Y POSITIONS ===========================================
-		
-		// ** NOTE: THE X POSITION OF THE PS2 RELATES TO THE Y POSITION OF THE LCD **
-		
-		// If X (of the PS2) is greater than 75% of its max value, increment Y (of LCD).
-		if(move&X_GREATER_THAN_3_4) 	yPos++;
-		// If X (of the PS2) is less than 25% of its max value, decrement Y (of LCD).
-		else if(move&X_LESS_THAN_1_4) yPos--;
-		
-		// If Y (of the PS2) is greater than 75% of its max value, increment X (of LCD).
-		if(move&Y_GREATER_THAN_3_4) 	xPos++;
-		// If Y (of the PS2) is less than 25% of its max value, decrement X (of LCD).
-		else if(move&Y_LESS_THAN_1_4) xPos--;
-
-		// Check bound of Y and hold position if it goes off of the screen
-		if(yPos >= 316) yPos = 315;
-		else if(yPos <=4 ) yPos = 5;
-
-		// Check bound of Y and wrap around if it goes off of the screen
-		if(xPos >=  234) xPos = 233;
-		else if(xPos <= 5) xPos = 6;
-		
-	// Draw ship at new position 
-	lcd_draw_image(
-		xPos-6, 13, yPos-4, 9, placeholder_image, 
-		LCD_COLOR_WHITE, LCD_COLOR_BLACK
-  );
-}
-
-
-
-
 
 //*****************************************************************************
 //*****************************************************************************
@@ -275,6 +209,7 @@ int main(void)
 	int counterB = 0;		// Counter for TimerB's Interrupt Handler
 	uint32_t x_value;
 	uint32_t y_value;
+	uint8_t data;
 	i2c_status_t td_status;
 	uint16_t x = 0;
 	uint16_t y = 0;
@@ -287,6 +222,7 @@ int main(void)
 	uint8_t pbData = 0;
 	char initial[4];
 	bool foo = false;
+
 	
 	// INITIALIZE FUNCTIONS =====================================================
 	initialize_hardware();
@@ -303,151 +239,117 @@ int main(void)
   put_string("\n\r");  
   put_string("************************************\n\r");
 	
-	
-	
-	
-	for(addr = ADDR_START; addr <(ADDR_START+3*5); addr++)
-  {
-      printf("Writing %i\n\r",0x0);
-      eeprom_byte_write(I2C1_BASE,addr, 0x0);
-  }
-	
-	
 
-  high_scores_test();
-	lcd_clear_screen(LCD_COLOR_BLACK);
+	// Set state to Main Menu and start the while loop
+	state=MAIN_MENU;
+	new_state = true;
   while(1)
 	{
-		if(state == MAIN_MENU){
-			if(interrupt_timerA){
-				interrupt_timerA = false;
-				td_status = ft6x06_read_td_status();
-				print_main_menu();
-			}
+		if(new_state){
+			new_state=false;
 			
-			if( td_status >0 )
-				y = ft6x06_read_y();
+			lcd_clear_screen(LCD_COLOR_BLACK);
 			
-			if ((y >120)&& (y < 170)){
-				lcd_clear_screen(LCD_COLOR_BLACK);
-				game_init();
-				state = MAIN_GAME;
-			}
+			// If state is main menu, print the menu
+			if(state==MAIN_MENU) print_main_menu();
+			// If state is high score, print the high score screen
+			else if(state==HIGH_SCORE) print_high_scores();
+			// If state is main game the initialize the game
+			else if(state==MAIN_GAME) game_init();
+			// If state is game over the initialize the game over menu
+			else if(state==GAME_OVER) print_game_over();
 			
-			else if ((y > 70) && ( y < 120 )){
-				lcd_clear_screen(LCD_COLOR_BLACK);
-				pull_high_scores();
-				state = HIGH_SCORE;
-			}
 		}
-		
-		if (state == HIGH_SCORE){
+		if(interrupt_timerA){
+			interrupt_timerA = false;
+			counterA = ((counterA+1)%TIMER_A_CYCLES);
 			
-			if(interrupt_timerB){
-				interrupt_timerB = false;
-				td_status = ft6x06_read_td_status();
-				
-				counterB = ((counterB+1)%TIMER_B_CYCLES);
-				if(counterB==0)
-					print_high_scores();
-			}
-			
-			if( td_status >0 )
+			// Check for Touchscreen press
+			td_status = ft6x06_read_td_status();
+			// If Touchscreen event occured, read the Y value
+			if( td_status >0 ){
 				y = ft6x06_read_y();
-			
-			if ( (y < 60) && (y > 10) ){
-				lcd_clear_screen(LCD_COLOR_BLACK);
-				state = MAIN_MENU;
-			}			
-		}
-		
-		if(state == MAIN_GAME){
-			//*************************************************************************
-			// TIMER A INTERRUPT HANDLING
-			//*************************************************************************
-			if(interrupt_timerA)
-			{		
-				// CLEAR INTERRUPT INDICATOR ============================================
-				interrupt_timerA = false;
-				
-				// TOGGLE LED ===========================================================
-				// Increment the counter & reset to zero if it reached TIMER_A_CYCLES
-				counterA = ((counterA+1)%TIMER_A_CYCLES);
-		
-				// Toggle Blue LED every time the counter resets
-				if(counterA==0);
-				
-				
-				// TOGGLE WRITE MODE ====================================================
-				if(sw1_debounce()){
+
+				if(state==MAIN_MENU){
+					// If the Y is the START GAME button then start the game
+					if ((y >120)&& (y < 170)){
+						state = MAIN_GAME;
+						new_state = true;
+					}
+					// If the Y is the HIGH SCORE button then got to high scores
+					else if ((y > 70) && ( y < 120 )){
+						state = HIGH_SCORE;
+						new_state = true;
+					}
+				} 
+				// If the Y is the MAIN_MENU button then got to the main menu
+				else if (state==HIGH_SCORE){
+					if ( (y < 60) && (y > 10) ){
+						state = MAIN_MENU;
+						new_state = true;
+					}		
 				}
+				// If the Y is the high score button then got to high scores
+				else if(state == GAME_OVER){
+          if ( (y < 120) && (y > 10) ){
+				    state = HIGH_SCORE;
+            new_state = true;
+				    for(i = 0; i < NUM_HIGH_SCORES; i++){
+					    if(player_score > high_scores[i]){
+                print_new_record();
+                cursor_pos = 0;
+                selected_char = 0;
+                state = NEW_RECORD;
+              }
+				    }		
+			    }
+				}	 
+        
+ 
 			}
-			
-			//*************************************************************************
-			// TIMER B INTERRUPT HANDLING
-			//*************************************************************************
-			if(interrupt_timerB)
-			{					
-				// CLEAR INTERRUPT INDICATOR ============================================
-				interrupt_timerB = false;
-				if(counterB==0) {
-					update_enemies();
+			if (state==MAIN_GAME){
+				// Update bullet positions
+				update_bullets();
+				
+				//If increment of 5 read ADC
+				if(counterA%5==0) {
+					// Initialize ADC Read
+					myADC->PSSI = ADC_PSSI_SS2;
+					//update_enemies();
+					if(update_enemies()) {
+						state = MAIN_MENU;
+						new_state = true;
+					}
 					update_LCD();
 				}
-				// TOGGLE LED & INITIALIZE ADC READ =====================================
-				// Increment the counter & reset to zero if it reached TIMER_B_CYCLES
-				counterB = ((counterB+1)%TIMER_B_CYCLES);
+				// If new interrupt count read PEXP buttons
+				if(counterA==0){
+					if(pexp_read_buttons(I2C1_BASE, &data) != I2C_OK){
+						put_string("error reading port expander");
+						continue;
+					}else if(data & PEXP_BUTTON_DOWN) fire_bullet(true, 0, 0);
+				}	
+			}
+		}
+
+		//*************************************************************************
+		// TIMER B INTERRUPT HANDLING
+		//*************************************************************************
+		if(interrupt_timerB)
+		{					
+			// CLEAR INTERRUPT INDICATOR ============================================
+			interrupt_timerB = false;
+			
+			// Increment the counter & reset to zero if it reached TIMER_B_CYCLES
+			counterB = ((counterB+1)%TIMER_B_CYCLES);
 				
-				// Initialize ADC Read
-				myADC->PSSI = ADC_PSSI_SS2;
-				
+			if(state == MAIN_GAME){
 				if(counterB==0) {
-				}
+					update_LCD();
+				}	
 			}
 
-			//*************************************************************************
-			// ADC0SS2 INTERRUPT HANDLING
-			//*************************************************************************
-			if(interrupt_adc0ss2)
-			{	
-				// CLEAR INTERRUPT INDICATOR ============================================
-				interrupt_adc0ss2 = false;
-
-				x_value = (uint32_t)(myADC->SSFIFO2 & 0xFFF);
-				y_value = (uint32_t)(myADC->SSFIFO2 & 0xFFF);
-				
-				ship_move(x_value, y_value);
-			}
-		}
-		
-		
-		if(state == GAME_OVER){
 			
-			if(interrupt_timerB){
-				interrupt_timerB = false;
-				td_status = ft6x06_read_td_status();
-				
-				counterB = ((counterB+1)%TIMER_B_CYCLES);
-				if(counterB==0)
-					print_game_over();
-			}
-			
-			if( td_status >0 )
-				y = ft6x06_read_y();
-			
-			if ( (y < 120) && (y > 10) ){
-				lcd_clear_screen(LCD_COLOR_BLACK);
-				
-				state = HIGH_SCORE;
-				for(i = 0; i < NUM_HIGH_SCORES; i++){
-					if(player_score > high_scores[i])
-						print_new_record();
-						cursor_pos = 0;
-						selected_char = 0;
-						state = NEW_RECORD;
-				}		
-			}			
-		}
 		
 		if(state == NEW_RECORD){
 			if(interrupt_timerB){					
@@ -456,24 +358,6 @@ int main(void)
 				// Initialize ADC Read
 				myADC->PSSI = ADC_PSSI_SS2;
 			}
-			
-			if(interrupt_adc0ss2){	
-				// CLEAR INTERRUPT INDICATOR
-				interrupt_adc0ss2 = false;
-				x_value = (uint32_t)(myADC->SSFIFO2 & 0xFFF);
-				y_value = (uint32_t)(myADC->SSFIFO2 & 0xFFF);
-				
-					// Check if the x value is >= 75% or <= 25%
-					// if(x_value >= 0xBFD)				;
-					// else if(x_value<= 0x3FF)		;
-	
-					// Check if the y value is >= 75% or <= 25%
-					if(y_value >= 0xBFD)	selected_char = (selected_char+1)%26;
-					else if(y_value <= 0x3FF) selected_char = selected_char-1;
-					if (selected_char < 0)
-					initial[cursor_pos] = (char)(selected_char + 65);				
-			}
-			
 			pexp_button_read( I2C1_BASE, &pbData );
 			if ( pbData & 0x8 ){
 				if(cursor_pos >=2 ){
@@ -493,6 +377,30 @@ int main(void)
 			}
 			
 			lcd_print_stringXY(initial, 12,7, GALAGA_COLOR_3, LCD_COLOR_BLACK );			
+		}
+		//*************************************************************************
+		// ADC0SS2 INTERRUPT HANDLING
+		//*************************************************************************
+		if(interrupt_adc0ss2)
+		{	
+			// CLEAR INTERRUPT INDICATOR ============================================
+			interrupt_adc0ss2 = false;
+			
+			y_value = (uint32_t)(myADC->SSFIFO2 & 0xFFF);
+			x_value = (uint32_t)(myADC->SSFIFO2 & 0xFFF);
+			
+			if (state==MAIN_GAME){
+				if(x_value >= 0xBFD)
+					update_player(true);
+				else if (x_value <= 0x3FF)
+					update_player(false);
+			} else if(state == NEW_RECORD){
+          // Check if the y value is >= 75% or <= 25%
+					if(y_value >= 0xBFD)	selected_char = (selected_char+1)%26;
+					else if(y_value <= 0x3FF) selected_char = selected_char-1;
+					if (selected_char < 0)
+					initial[cursor_pos] = (char)(selected_char + 65);	
+      }
 		}
 	}
 }

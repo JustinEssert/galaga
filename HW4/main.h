@@ -44,8 +44,8 @@
 
 // DEFINE INTERRUPT CYCLES ====================================================
 // Define a value of 10 for TimerA/B's Interrupt Handler
-#define TIMER_A_CYCLES 10
-#define TIMER_B_CYCLES 10
+#define TIMER_A_CYCLES 20
+#define TIMER_B_CYCLES 6
 
 // DEFINE STATUS BITS FOR PS2 READ ============================================
 // Define a value of 10 for TimerA/B's Interrupt Handler

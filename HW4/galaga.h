@@ -38,7 +38,7 @@
 #define FORMATION_1_START_Y					250
 #define FORMATION_2_LEFT_START_X		210
 #define FORMATION_2_RIGHT_START_X		0
-#define FORMATION_2_START_Y					60
+#define FORMATION_2_START_Y					100
 
 #define BOUNDRY_Y_TOP								280
 #define BOUNDRY_Y_BOTTOM						30
@@ -48,15 +48,48 @@
 #define PLAYER_START_Y							30
 
 #define NUM_UNITS										17
+
+#define UNIT_SIZE										24
+
+#define SPACING											30
+#define ROW_1_START									150
+#define ROW_2_START									180
+#define ROW_3_START									180
+
 #define NUM_HIGH_SCORES							5
 
 extern uint32_t player_score;
 extern uint32_t high_scores[5];
 
 
+#define DELAY_SMALL									-5
+#define DELAY_LARGE									-40
+
+#define FORMATION_1_LENGTH					14
+#define FORMATION_2_LENGTH					24
+
+#define NUM_PLAYER_BULLETS					5
+#define PLAYER_BULLET_COLOR					0xF800
+#define NUM_ENEMY_BULLETS						10
+#define ENEMY_BULLET_COLOR					0xFFE0
+#define BULLET_WIDTH								2
+#define BULLET_HEIGHT								8
+#define BULLET_SPEED								5
+#define TRACKING_SPEED							1
+#define HITBOX_BUFFER								1
+
 void game_init();
-void update_enemies();
-void update_LCD();
+bool update_enemies();
+void update_player(bool left);
+
+//*****************************************************************************
+// Function Name: update_bullets
+//*****************************************************************************
+//	Summary: Updates the position of all bullets and checks for collisions.
+// 
+//*****************************************************************************
+void update_bullets();
+//void update_LCD();
 
 
 
