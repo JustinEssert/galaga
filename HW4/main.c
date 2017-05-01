@@ -39,6 +39,9 @@ typedef enum {
 	NEW_RECORD
 } gameState_t;
 
+bool new_state = true;
+
+
 char group[] = "Group27";
 char individual_1[] = "Justin Essert";
 char individual_2[] = "James Mai";
@@ -52,8 +55,7 @@ volatile bool interrupt_timerA = false;
 volatile bool interrupt_timerB = false;
 volatile bool interrupt_adc0ss2 = false;
 
-uint16_t *adc_val_X;
-uint16_t *adc_val_Y;
+gameState_t state;
 
 // Game Variables
 uint8_t placeholder_image[20] = {
@@ -206,7 +208,6 @@ int main(void)
 	i2c_status_t td_status;
 	uint16_t x = 0;
 	uint16_t y = 0;
-	gameState_t state = HIGH_SCORE;
 	uint16_t addr;
 
 	
@@ -225,161 +226,123 @@ int main(void)
   put_string("\n\r");  
   put_string("************************************\n\r");
 	
-	
-	
-	
-	for(addr = ADDR_START; addr <(ADDR_START+3*5); addr++)
-  {
-      printf("Writing %i\n\r",0x0);
-      eeprom_byte_write(I2C1_BASE,addr, 0x0);
-  }
-	
-	
 
-  high_scores_test();
-	lcd_clear_screen(LCD_COLOR_BLACK);
+	// Set state to Main Menu and start the while loop
+	state=MAIN_MENU;
+	new_state = true;
   while(1)
 	{
-		if(state == MAIN_MENU){
-			if(interrupt_timerA){
-				interrupt_timerA = false;
-				td_status = ft6x06_read_td_status();
-				print_main_menu();
-			}
-
-			if( td_status >0 )
-				y = ft6x06_read_y();
-
+		if(new_state){
+			new_state=false;
 			
-			if ((y >120)&& (y < 170)){
-				lcd_clear_screen(LCD_COLOR_BLACK);
-				game_init();
-				state = MAIN_GAME;
-			}
+			lcd_clear_screen(LCD_COLOR_BLACK);
 			
-			else if ((y > 70) && ( y < 120 )){
-				lcd_clear_screen(LCD_COLOR_BLACK);
-				pull_high_scores();
-				state = HIGH_SCORE;
-			}
+			// If state is main menu, print the menu
+			if(state==MAIN_MENU) print_main_menu();
+			// If state is high score, print the high score screen
+			else if(state==HIGH_SCORE) print_high_scores();
+			// If state is main game the initialize the game
+			else if(state==MAIN_GAME) game_init();
+			// If state is game over the initialize the game over menu
+			else if(state==GAME_OVER) print_game_over();
+			
 		}
-
-		if (state == HIGH_SCORE){
-			
-			if(interrupt_timerB){
-				interrupt_timerB = false;
-				td_status = ft6x06_read_td_status();
-				
-				counterB = ((counterB+1)%TIMER_B_CYCLES);
-				if(counterB==0)
-					print_high_scores();
-			}
-			
-
-			if( td_status >0 )
-				y = ft6x06_read_y();
-			
-			if ( (y < 60) && (y > 10) ){
-				lcd_clear_screen(LCD_COLOR_BLACK);
-				state = MAIN_MENU;
-			}			
-
-		}
-		
-		if(state == MAIN_GAME){
-			//*************************************************************************
-			// TIMER A INTERRUPT HANDLING
-			//*************************************************************************
-			if(interrupt_timerA)
-			{		
-				// CLEAR INTERRUPT INDICATOR ============================================
-				interrupt_timerA = false;
-				
-				// TOGGLE LED ===========================================================
-				// Increment the counter & reset to zero if it reached TIMER_A_CYCLES
+		if(interrupt_timerA){
+			interrupt_timerA = false;
 			counterA = ((counterA+1)%TIMER_A_CYCLES);
-			update_bullets();
-			// Toggle Blue LED every time the counter resets
-			if(counterA%10==0) {
-				update_LCD();
-				update_enemies();
-				if(counterA==0){
-					if(pexp_read_buttons(I2C1_BASE, &data) != I2C_OK);
-					if(data && PEXP_BUTTON_DOWN) fire_bullet(true, 0, 0);
-				}
-				// Initialize ADC Read
-				myADC->PSSI = ADC_PSSI_SS2;
-				
-				
-				// TOGGLE WRITE MODE ====================================================
-				if(sw1_debounce()){
-				}
-			}
 			
-			//*************************************************************************
-			// TIMER B INTERRUPT HANDLING
-			//*************************************************************************
-			if(interrupt_timerB)
-			{					
-				// CLEAR INTERRUPT INDICATOR ============================================
-				interrupt_timerB = false;
-				if(counterB==0) {
-					update_enemies();
+			// Check for Touchscreen press
+			td_status = ft6x06_read_td_status();
+			// If Touchscreen event occured, read the Y value
+			if( td_status >0 ){
+				y = ft6x06_read_y();
+
+				if(state==MAIN_MENU){
+					// If the Y is the START GAME button then start the game
+					if ((y >120)&& (y < 170)){
+						state = MAIN_GAME;
+						new_state = true;
+					}
+					// If the Y is the HIGH SCORE button then got to high scores
+					else if ((y > 70) && ( y < 120 )){
+						state = HIGH_SCORE;
+						new_state = true;
+					}
+				} 
+				// If the Y is the MAIN_MENU button then got to the main menu
+				else if (state==HIGH_SCORE){
+					if ( (y < 60) && (y > 10) ){
+						state = MAIN_MENU;
+						new_state = true;
+					}		
+				}
+				// If the Y is the high score button then got to high scores
+				else if(state == GAME_OVER){
+					if ( (y < 120) && (y > 10) ){
+						state = HIGH_SCORE;
+						new_state = true;
+					}
+				}				
+			}
+			if (state==MAIN_GAME){
+				// Update bullet positions
+				update_bullets();
+				
+				//If increment of 5 read ADC
+				if(counterA%5==0) {
+					// Initialize ADC Read
+					myADC->PSSI = ADC_PSSI_SS2;
+					//update_enemies();
+					if(update_enemies()) {
+						state = MAIN_MENU;
+						new_state = true;
+					}
 					update_LCD();
 				}
-				// TOGGLE LED & INITIALIZE ADC READ =====================================
-				// Increment the counter & reset to zero if it reached TIMER_B_CYCLES
-				counterB = ((counterB+1)%TIMER_B_CYCLES);
-				
-				// Initialize ADC Read
-				myADC->PSSI = ADC_PSSI_SS2;
-				
-				if(counterB==0) {
-				}
+				// If new interrupt count read PEXP buttons
+				if(counterA==0){
+					if(pexp_read_buttons(I2C1_BASE, &data) != I2C_OK){
+						put_string("error reading port expander");
+						continue;
+					}else if(data & PEXP_BUTTON_DOWN) fire_bullet(true, 0, 0);
+				}	
 			}
-			//*************************************************************************
-			// ADC0SS2 INTERRUPT HANDLING
-			//*************************************************************************
-			if(interrupt_adc0ss2)
-			{	
-				// CLEAR INTERRUPT INDICATOR ============================================
-				interrupt_adc0ss2 = false;
+		}
 
-				x_value = (uint32_t)(myADC->SSFIFO2 & 0xFFF);
-				y_value = (uint32_t)(myADC->SSFIFO2 & 0xFFF);
+		//*************************************************************************
+		// TIMER B INTERRUPT HANDLING
+		//*************************************************************************
+		if(interrupt_timerB)
+		{					
+			// CLEAR INTERRUPT INDICATOR ============================================
+			interrupt_timerB = false;
+			
+			// Increment the counter & reset to zero if it reached TIMER_B_CYCLES
+			counterB = ((counterB+1)%TIMER_B_CYCLES);
 				
-			if(x_value >= 0xBFD)
-				update_player(true);
-			else if (x_value <= 0x3FF)
-				update_player(false);
+			if(state == MAIN_GAME){
+				if(counterB==0) {
+					update_LCD();
+				}	
 			}
 		}
-		
-		
-		if(state == GAME_OVER){
+		//*************************************************************************
+		// ADC0SS2 INTERRUPT HANDLING
+		//*************************************************************************
+		if(interrupt_adc0ss2)
+		{	
+			// CLEAR INTERRUPT INDICATOR ============================================
+			interrupt_adc0ss2 = false;
 			
-			if(interrupt_timerB){
-				interrupt_timerB = false;
-				td_status = ft6x06_read_td_status();
-				
-				counterB = ((counterB+1)%TIMER_B_CYCLES);
-				if(counterB==0)
-					print_game_over();
+			y_value = (uint32_t)(myADC->SSFIFO2 & 0xFFF);
+			x_value = (uint32_t)(myADC->SSFIFO2 & 0xFFF);
+			
+			if (state==MAIN_GAME){
+				if(x_value >= 0xBFD)
+					update_player(true);
+				else if (x_value <= 0x3FF)
+					update_player(false);
 			}
-			
-			if( td_status >0 )
-				y = ft6x06_read_y();
-			
-			if ( (y < 120) && (y > 10) ){
-				lcd_clear_screen(LCD_COLOR_BLACK);
-				state = HIGH_SCORE;
-			}			
-		}
-		
-		if(state == NEW_RECORD){
-			
-			
-			
 		}
 	}
 }

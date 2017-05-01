@@ -76,6 +76,9 @@ typedef struct bullet{
 short player_lives = PLAYER_START_LIVES;
 
 uint32_t high_score = 0, player_score=0;
+uint32_t num_enemies= NUM_UNITS-1;
+
+uint32_t high_scores[5];
 
 uint32_t high_scores[5];
 
@@ -308,7 +311,7 @@ void fire_bullet (bool player_bullet, uint16_t x, uint16_t y) {
 		for(i=0;i<NUM_PLAYER_BULLETS;i++){
 			if(!player_bullets[i].active){
 				player_bullets[i].pos.x = units[0].pos.x + UNIT_SIZE/2;
-				player_bullets[i].pos.y = units[0].pos.y;
+				player_bullets[i].pos.y = units[0].pos.y + UNIT_SIZE;
 				player_bullets[i].active = true;
 				i=NUM_PLAYER_BULLETS;
 			}
@@ -332,12 +335,14 @@ void fire_bullet (bool player_bullet, uint16_t x, uint16_t y) {
 //	Summary: Updates all of the enemies with respect to their move state
 // 
 //*****************************************************************************
-void update_enemies() {
+bool update_enemies() {
 	uint8_t i;
 	uint16_t x_old, y_old;
+
 	for(i=1; i<NUM_UNITS; i++) {
 		
 		if(units[i].active){
+			num_enemies++;
 			lcd_clear_Image(units[i].pos.x, units[i].pos.y);
 		}
 		
@@ -426,9 +431,12 @@ void update_enemies() {
 				units[i].formation_index--;
 			} else {
 				units[i].active = false;
+				num_enemies--;
 			}
 		}
 	}
+	if(num_enemies <= 0) return true;
+	return false;
 }
 
 //*****************************************************************************
@@ -527,9 +535,7 @@ void print_main_menu(){
 	char title[] = "--GALAGA--";
 	char start[] = "START GAME";
 	char scores[] = "HIGH SCORE";
-
-
-
+  
 	lcd_print_stringXY(title, 2, 5, GALAGA_COLOR_1, LCD_COLOR_BLACK );
 	lcd_print_stringXY(start, 2, 11, GALAGA_COLOR_2, LCD_COLOR_BLACK );
 	lcd_print_stringXY(scores, 2,14, GALAGA_COLOR_2, LCD_COLOR_BLACK );
@@ -571,6 +577,7 @@ void print_high_scores(){
 	lcd_print_stringXY(banner, 1, 5, GALAGA_COLOR_1, LCD_COLOR_BLACK );
 	lcd_print_stringXY(msg, 2,18, GALAGA_COLOR_2, LCD_COLOR_BLACK );
 
+	pull_high_scores();
 	
 	for (i = 0; i < NUM_HIGH_SCORES; i++){
 		initials = (char*) &high_scores[i];

@@ -76,7 +76,7 @@
 #define HITBOX_BUFFER								1
 
 void game_init();
-void update_enemies();
+bool update_enemies();
 void update_player(bool left);
 
 //*****************************************************************************
