@@ -104,7 +104,19 @@ short formX_2[FORMATION_2_LENGTH] = {  0,   0,   0,   5,	5, 10, 10,  5,  5, 0,  
 //*****************************************************************************
 void initialize_units(){
 	uint8_t i;
-
+	for(i=0; i<NUM_UNITS; i++) {
+		units[i].dir 							= DIR_U;
+		units[i].type							= PLAYER;
+		units[i].pos.y						= 0;
+		units[i].pos.x						= 0;
+		units[i].home_pos.y				= 0;
+		units[i].home_pos.x				= 0;
+		units[i].health						= 0;
+		units[i].formation_index	= 0;
+		units[i].move_state				= INIT_FORMATION;
+		units[i].active						= false;
+	}
+	
 	for(i=0; i<NUM_UNITS; i++) {
 		
 		units[i].move_state					= INIT_FORMATION;
@@ -201,7 +213,6 @@ void initialize_units(){
 //*****************************************************************************
 bool update_LCD () {
 	uint32_t x, i;
-	bool toggle = false;
 	static short count = 0;
 	char banner1[] = "HIGH         ";
 	char banner2[] = "1UP          ";
@@ -267,8 +278,8 @@ void game_init() {
 	short i;
 	lcd_clear_screen(LCD_COLOR_BLACK);
 	initialize_units();
-	update_LCD();
 	player_lives = PLAYER_START_LIVES;
+	update_LCD();
 	level = 1;
 	player_score = 0;
 	
@@ -597,11 +608,10 @@ void update_bullets(){
 			
 			enemy_bullets[i].pos.y -= BULLET_SPEED;
 			
-			dX = enemy_bullets[i].pos.x-UNIT_SIZE/2 - units[0].pos.x;
-			dY = enemy_bullets[i].pos.y-UNIT_SIZE/2 - units[0].pos.y;
 			
-			
-			if(level>1){
+			if(level>2){
+				dX = enemy_bullets[i].pos.x-UNIT_SIZE/2 - units[0].pos.x;
+				dY = enemy_bullets[i].pos.y-UNIT_SIZE/2 - units[0].pos.y;
 				track_index++;
 				if(track_index<=5-level){
 					if(dX>0) enemy_bullets[i].pos.x 			-= TRACKING_SPEED;
@@ -610,8 +620,8 @@ void update_bullets(){
 				}
 			}
 			
-			dX = enemy_bullets[i].pos.x-UNIT_SIZE/2 - units[0].pos.x;
-			dY = enemy_bullets[i].pos.y-UNIT_SIZE/2 - units[0].pos.y;
+			dX = enemy_bullets[i].pos.x- units[0].pos.x;
+			dY = enemy_bullets[i].pos.y- units[0].pos.y;
 			
 			if(enemy_bullets[i].pos.y<BOUNDRY_Y_BOTTOM){
 				enemy_bullets[i].active = false;
