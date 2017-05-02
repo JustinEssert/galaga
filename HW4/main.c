@@ -304,9 +304,7 @@ int main(void)
 	gameState_t state;
 	uint16_t addr;
 	int i,j;
-	bool toggle;
-	char prev[4] = "   ";
-	
+	bool toggle;	
 	int cursor_pos = 0;  // cursor position
 	int selected_char = 0; // A is 0, B is 1...
 	uint8_t pbData = 0;
@@ -402,6 +400,7 @@ int main(void)
                 print_new_record();
                 cursor_pos = 0;
                 selected_char = 0;
+								*((uint32_t*)initial) = 0;
                 state = NEW_RECORD;
               }
 				    }		
@@ -534,7 +533,6 @@ int main(void)
 					if (selected_char < 0)
 						selected_char = 25;
 					// Set new character in cursor position
-					if(cursor_pos>0) prev[cursor_pos-1] = initial[cursor_pos-1];
 					initial[cursor_pos] = (char)selected_char+'A';	
       }
 		}

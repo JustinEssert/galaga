@@ -676,7 +676,7 @@ void print_main_menu(){
 void print_game_over(){
 	static bool state = false;
 	char gameOver[] = "GAME  OVER";
-	char score[] = "SCORE:";
+	char score[] = "SCORE";
 	char msg[] = "TAP TO CONT";
 	char score_value[9];
 	
@@ -857,7 +857,7 @@ void print_new_record(){
 	char msg1[] = "AND R BTN";
 	char msg2[] = "TO ENTER";
 	char msg3[] = "YOUR NAME";
-	char score[] = "SCORE:";
+	char score[] = "SCORE";
 	
 	char score_value[9];
 	

@@ -96,7 +96,7 @@ void update_bullets();
 //	Summary: prints a new frame to the LCD
 //
 //*****************************************************************************
-void update_LCD();
+bool update_LCD();
 //*****************************************************************************
 // Function Name: game_init
 //*****************************************************************************
@@ -122,10 +122,9 @@ void game_init();
 //
 //			y										starting y coordinate of bullet
 //*****************************************************************************
-void fire_bullet(
-	bool player_bullet, 
-	uint16_t x, 
-	uint16_t y
+void fire_bullet (
+	bool player_bullet,
+	uint32_t rand_num
 );
 //*****************************************************************************
 // Function Name: update_enemies
